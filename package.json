@@ -10,6 +10,7 @@
     "dev:prod": "cross-env NODE_OPTIONS=--no-deprecation rm -rf .next && pnpm build && pnpm start",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "import:darsha-home": "tsx src/scripts/import-darsha-home.ts",
     "ii": "cross-env NODE_OPTIONS=--no-deprecation pnpm --ignore-workspace install",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "lint:fix": "cross-env NODE_OPTIONS=--no-deprecation eslint . --fix",
@@ -23,6 +24,7 @@
   },
   "dependencies": {
     "@payloadcms/admin-bar": "3.89.0",
+    "@payloadcms/db-vercel-postgres": "3.89.0",
     "@payloadcms/email-nodemailer": "3.89.0",
     "@payloadcms/live-preview-react": "3.89.0",
     "@payloadcms/next": "3.89.0",
@@ -30,6 +32,7 @@
     "@payloadcms/plugin-form-builder": "3.89.0",
     "@payloadcms/plugin-seo": "3.89.0",
     "@payloadcms/richtext-lexical": "3.89.0",
+    "@payloadcms/storage-vercel-blob": "3.89.0",
     "@payloadcms/translations": "3.89.0",
     "@payloadcms/ui": "3.89.0",
     "@radix-ui/react-accordion": "1.2.11",
@@ -62,8 +65,7 @@
     "sharp": "0.34.2",
     "sonner": "^1.7.2",
     "stripe": "18.5.0",
-    "tailwind-merge": "^3.4.0",
-    "@payloadcms/db-vercel-postgres": "3.89.0"
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

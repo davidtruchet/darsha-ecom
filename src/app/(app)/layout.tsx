@@ -4,13 +4,23 @@ import { AdminBar } from '@/components/AdminBar'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
-import { ensureStartsWith } from '@/utilities/ensureStartsWith'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
-import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import React from 'react'
+import { GeistSans } from 'geist/font/sans'
+import { Baskervville, Poppins } from 'next/font/google'
 import './globals.css'
+
+const baskervville = Baskervville({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-baskervville',
+})
+const poppins = Poppins({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+})
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -42,8 +52,10 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      className={[GeistSans.variable, GeistMono.variable].filter(Boolean).join(' ')}
-      lang="en"
+      className={[GeistSans.variable, GeistMono.variable, baskervville.variable, poppins.variable]
+        .filter(Boolean)
+        .join(' ')}
+      lang="es"
       suppressHydrationWarning
     >
       <head>
@@ -51,13 +63,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
       </head>
-      <body>
+      <body className="antialiased">
         <Providers>
           <AdminBar />
           <LivePreviewListener />
 
           <Header />
-          <main>{children}</main>
+          <main className="bg-[#CEC3BA] pt-16">{children}</main>
           <Footer />
         </Providers>
       </body>

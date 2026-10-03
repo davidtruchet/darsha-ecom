@@ -485,6 +485,73 @@ export interface Page {
     | ThreeItemGridBlock
     | BannerBlock
     | FormBlock
+    | {
+        heading: string;
+        intro?: string | null;
+        image: number | Media;
+        label: string;
+        url: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaHero';
+      }
+    | {
+        heading: string;
+        intro?: string | null;
+        cards?:
+          | {
+              title: string;
+              image: number | Media;
+              url: string;
+              badge?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaCards';
+      }
+    | {
+        heading: string;
+        paragraphs?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        image: number | Media;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaImageText';
+      }
+    | {
+        heading: string;
+        reviews?:
+          | {
+              title: string;
+              author: string;
+              quote: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaTestimonials';
+      }
+    | {
+        heading: string;
+        items?:
+          | {
+              kind: 'phone' | 'location' | 'whatsapp';
+              label: string;
+              url: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaContact';
+      }
   )[];
   meta?: {
     title?: string | null;
@@ -1217,6 +1284,78 @@ export interface PagesSelect<T extends boolean = true> {
         threeItemGrid?: T | ThreeItemGridBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        darshaHero?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              image?: T;
+              label?: T;
+              url?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaCards?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              cards?:
+                | T
+                | {
+                    title?: T;
+                    image?: T;
+                    url?: T;
+                    badge?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        darshaImageText?:
+          | T
+          | {
+              heading?: T;
+              paragraphs?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+              image?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaTestimonials?:
+          | T
+          | {
+              heading?: T;
+              reviews?:
+                | T
+                | {
+                    title?: T;
+                    author?: T;
+                    quote?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        darshaContact?:
+          | T
+          | {
+              heading?: T;
+              items?:
+                | T
+                | {
+                    kind?: T;
+                    label?: T;
+                    url?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   meta?:
     | T

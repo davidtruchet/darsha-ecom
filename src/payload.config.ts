@@ -1,4 +1,6 @@
 import { vercelPostgresAdapter } from '@payloadcms/db-vercel-postgres'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
+import { es } from '@payloadcms/translations/languages/es'
 import {
   BoldFeature,
   EXPERIMENTAL_TableFeature,
@@ -26,6 +28,7 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  i18n: { fallbackLanguage: 'es', supportedLanguages: { es } },
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
@@ -39,6 +42,7 @@ export default buildConfig({
   },
   collections: [Users, Pages, Categories, Media],
   db: vercelPostgresAdapter({
+    push: false,
     pool: {
       connectionString: process.env.POSTGRES_URL || '',
     },
@@ -81,7 +85,14 @@ export default buildConfig({
   //email: nodemailerAdapter(),
   endpoints: [],
   globals: [Header, Footer],
-  plugins,
+  plugins: [
+    ...plugins,
+    vercelBlobStorage({
+      collections: { media: true },
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      alwaysInsertFields: true,
+    }),
+  ],
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
