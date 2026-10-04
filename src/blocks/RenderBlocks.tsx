@@ -6,6 +6,13 @@ import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { ThreeItemGridBlock } from '@/blocks/ThreeItemGrid/Component'
+import {
+  DarshaCardsBlock,
+  DarshaContactBlock,
+  DarshaHeroBlock,
+  DarshaImageTextBlock,
+  DarshaTestimonialsBlock,
+} from '@/blocks/Darsha/Component'
 import { toKebabCase } from '@/utilities/toKebabCase'
 import React, { Fragment } from 'react'
 
@@ -20,6 +27,11 @@ const blockComponents = {
   formBlock: FormBlock,
   mediaBlock: MediaBlock,
   threeItemGrid: ThreeItemGridBlock,
+  darshaHero: DarshaHeroBlock,
+  darshaCards: DarshaCardsBlock,
+  darshaImageText: DarshaImageTextBlock,
+  darshaTestimonials: DarshaTestimonialsBlock,
+  darshaContact: DarshaContactBlock,
 }
 
 export const RenderBlocks: React.FC<{
@@ -40,7 +52,7 @@ export const RenderBlocks: React.FC<{
 
             if (Block) {
               return (
-                <div className="my-16" key={index}>
+                <div className={blockType.startsWith('darsha') ? undefined : 'my-16'} key={index}>
                   {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
                   {/* @ts-ignore - weird type mismatch here */}
                   <Block id={toKebabCase(blockName!)} {...block} />

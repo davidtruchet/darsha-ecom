@@ -11,6 +11,13 @@ import { Content } from '@/blocks/Content/config'
 import { FormBlock } from '@/blocks/Form/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { hero } from '@/fields/hero'
+import {
+  DarshaCards,
+  DarshaContact,
+  DarshaHero,
+  DarshaImageText,
+  DarshaTestimonials,
+} from '@/blocks/Darsha/config'
 import { slugField } from 'payload'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import {
@@ -31,7 +38,7 @@ export const Pages: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Content',
+    group: 'Contenido',
     defaultColumns: ['title', 'slug', 'updatedAt'],
     livePreview: {
       url: ({ data, req }) =>
@@ -80,7 +87,8 @@ export const Pages: CollectionConfig = {
       tabs: [
         {
           fields: [hero],
-          label: 'Hero',
+          label: 'Portada anterior',
+          admin: { condition: () => false },
         },
         {
           fields: [
@@ -96,11 +104,16 @@ export const Pages: CollectionConfig = {
                 ThreeItemGrid,
                 Banner,
                 FormBlock,
+                DarshaHero,
+                DarshaCards,
+                DarshaImageText,
+                DarshaTestimonials,
+                DarshaContact,
               ],
               required: true,
             },
           ],
-          label: 'Content',
+          label: 'Contenido',
         },
         {
           name: 'meta',

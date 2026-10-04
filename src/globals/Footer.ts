@@ -5,6 +5,7 @@ import { link } from '@/fields/link'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
+  label: 'Pie de página',
   access: {
     read: () => true,
     update: adminOnly,
@@ -12,6 +13,7 @@ export const Footer: GlobalConfig = {
   fields: [
     {
       name: 'navItems',
+      label: 'Enlaces del pie',
       type: 'array',
       fields: [
         link({
