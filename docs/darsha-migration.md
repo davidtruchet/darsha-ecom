@@ -11,3 +11,9 @@ The reset removes admin users. Open `/admin` to create the first administrator a
 Local development can omit `BLOB_READ_WRITE_TOKEN`, in which case media uses local storage. Vercel deployments must provide it so uploaded files persist. Frontend media URLs use Next.js Image and permit Vercel Blob's public hostname, allowing normal Vercel image optimization.
 
 The old demo seed endpoint is destructive and must not be used for Darsha content.
+
+## Servicios import
+
+The `servicios` page uses a gradient intro, two treatment accordion blocks, and a booking call-to-action. Treatment text and the original price strings are editable within the page blocks. The section-level “Mostrar precios de tratamientos” option is off by default, so prices stay hidden until an editor enables it. Treatment booking continues to link to WhatsApp; products use the separate shop checkout.
+
+Run `pnpm payload migrate` to add the Servicios block tables, then `pnpm import:darsha-services`. The import uploads the two treatment photos from `public/darsha` and publishes `/servicios`. Decorative curves are served from the same local asset directory. Rerunning the script skips an existing `servicios` page rather than overwriting edits.

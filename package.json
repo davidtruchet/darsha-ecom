@@ -11,6 +11,7 @@
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "import:darsha-home": "tsx src/scripts/import-darsha-home.ts",
+    "import:darsha-services": "tsx src/scripts/import-darsha-services.ts",
     "ii": "cross-env NODE_OPTIONS=--no-deprecation pnpm --ignore-workspace install",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "lint:fix": "cross-env NODE_OPTIONS=--no-deprecation eslint . --fix",

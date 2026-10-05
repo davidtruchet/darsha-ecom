@@ -13,6 +13,9 @@ import {
   DarshaImageTextBlock,
   DarshaTestimonialsBlock,
 } from '@/blocks/Darsha/Component'
+import { DarshaBookingCTABlock } from '@/blocks/Darsha/BookingCTA'
+import { DarshaServicesIntroBlock } from '@/blocks/Darsha/ServicesIntro'
+import { DarshaTreatmentsBlock } from '@/blocks/Darsha/Treatments'
 import { toKebabCase } from '@/utilities/toKebabCase'
 import React, { Fragment } from 'react'
 
@@ -32,6 +35,9 @@ const blockComponents = {
   darshaImageText: DarshaImageTextBlock,
   darshaTestimonials: DarshaTestimonialsBlock,
   darshaContact: DarshaContactBlock,
+  darshaServicesIntro: DarshaServicesIntroBlock,
+  darshaTreatments: DarshaTreatmentsBlock,
+  darshaBookingCTA: DarshaBookingCTABlock,
 }
 
 export const RenderBlocks: React.FC<{

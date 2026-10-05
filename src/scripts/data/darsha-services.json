@@ -1,0 +1,107 @@
+{
+  "faciales": [
+    {
+      "title": "Limpieza Facial Profunda",
+      "description": "Una experiencia completa para cuidar, renovar y equilibrar tu piel desde el primer paso. El tratamiento incluye: evaluación personalizada, limpieza profunda, exfoliación química o mecánica, aplicación de puntas de diamante o renovadores celulares, extracciones, máscara y sérum adaptados a tu piel, hidratación y protector solar. Ideal para eliminar impurezas, mejorar la textura, oxigenar la piel y potenciar tu rutina de cuidado facial.",
+      "price": "1.600",
+      "duration": "60 a 70 minutos"
+    },
+    {
+      "title": "Tratamiento Revitalizante con Velo de Colágeno",
+      "description": "Una caricia nutritiva para pieles que necesitan frescura, hidratación y luminosidad. Incluye: evaluación personalizada, limpieza suave, exfoliación profunda, tonificación, aplicación de velo de colágeno con efecto tensor, crema hidratante y protector solar. Ideal para pieles apagadas, deshidratadas o con signos de fatiga.",
+      "price": "1.800",
+      "duration": "60 a 70 minutos"
+    },
+    {
+      "title": "Tratamiento Iluminador con Radiofrecuencia y Vitamina C",
+      "description": "Un protocolo completo para devolverle a tu piel vitalidad, suavidad y luminosidad. Incluye: limpieza profunda, exfoliación con puntas de diamante, radiofrecuencia facial, loción de vitamina C, máscara tensora, sérum regenerador, hidratación y protector solar. Ideal para pieles opacas, cansadas o con primeros signos de envejecimiento.",
+      "price": "1.900",
+      "duration": "70 minutos"
+    },
+    {
+      "title": "Limpieza Facial + Masaje Yoga Facial",
+      "description": "Una limpieza profunda combinada con una experiencia relajante y restauradora para tu rostro. Incluye: evaluación de la piel, limpieza, exfoliación, extracciones, tonificación, máscara descongestiva e hidratante, emulsión según tu tipo de piel y una secuencia de masajes de yoga facial, que relajan los músculos, mejoran la circulación y realzan la luminosidad natural. Ideal para purificar, equilibrar y revitalizar tu piel.",
+      "price": "1.900",
+      "duration": "75 minutos"
+    },
+    {
+      "title": "Radiofrecuencia Facial Tensora",
+      "description": "Tratamiento ideal para tensar, redefinir y revitalizar la piel sin necesidad de procedimientos invasivos. La radiofrecuencia estimula la producción natural de colágeno y elastina, mejorando visiblemente la firmeza, la textura y la definición del contorno facial.",
+      "price": "1.700 por sesión | Pack x3: 4.500",
+      "duration": "60 minutos",
+      "frequency": "Entre 4 y 6 sesiones para obtener resultados óptimos."
+    },
+    {
+      "title": "Limpieza Facial Deluxe",
+      "description": "Una experiencia completa que combina limpieza profunda, cuidado personalizado y relajación. Incluye evaluación de la piel, limpieza con puntas de diamante, vapor de ozono, extracciones, mascarilla, suero, hidratación intensa y masajes en rostro, cuello y escote. Finaliza con fotoprotección.",
+      "price": "1.900",
+      "duration": "75 minutos"
+    },
+    {
+      "title": "Tratamiento Anti-Acné",
+      "description": "Plan progresivo y personalizado para pieles con acné, que trabaja en profundidad para equilibrar, limpiar y renovar la piel. Cada sesión incluye técnicas y productos específicos para regular el sebo, tratar imperfecciones, suavizar marcas y lograr una piel más clara y uniforme.",
+      "price": "1.700 por sesión | Pack x3 sesiones: 4.500",
+      "duration": "60 minutos",
+      "frequency": "cada 10 a 15 días (mínimo 3 meses)"
+    },
+    {
+      "title": "Tratamiento Despigmentante",
+      "description": "Ideal para atenuar manchas solares, hormonales o post-acné, recuperando un tono más uniforme, luminoso y saludable. Incluye peelings personalizados en consultorio y acompañamiento con producto despigmentante domiciliario. Se recomienda un mínimo de 6 sesiones (cada 15 días) durante 3 meses.",
+      "price": "1.700 por sesión | Pack x3 sesiones: 4.500",
+      "duration": "45 a 60 minutos",
+      "frequency": "cada 15 días (mínimo 3 meses)"
+    },
+    {
+      "title": "Lifting Facial Reafirmante Timexpert Lift(In)",
+      "description": "Tratamiento de alta cosmética profesional con productos Germaine de Capuccini, diseñado para reafirmar, tensar y redefinir el contorno facial, con efecto lifting visible desde la primera sesión. Actúa en profundidad para combatir flacidez, signos de cansancio y pérdida de firmeza. Ideal para pieles maduras o con primeros signos de flacidez.",
+      "price": "2.500",
+      "duration": "60 minutos",
+      "frequency": "1 vez por semana (mínimo 3 sesiones)"
+    },
+    {
+      "title": "Peeling Químico Profesional",
+      "description": "Tratamiento dermocosmético que renueva la piel en profundidad mediante la aplicación de ácidos específicos. Ayuda a mejorar la textura, unificar el tono, reducir manchas, controlar el acné y atenuar líneas finas. Se adapta al tipo de piel y a los objetivos de cada persona, logrando una piel más luminosa, suave y revitalizada desde las primeras sesiones.",
+      "price": "1.700",
+      "duration": "45 a 60 minutos",
+      "frequency": "cada 15 días"
+    }
+  ],
+  "corporales": [
+    {
+      "title": "Masaje de Espalda y Cuello",
+      "description": "Un momento de pausa para reconectar con tu cuerpo. Este masaje se enfoca en liberar tensiones acumuladas en la zona alta de la espalda, cuello y hombros, combinando maniobras suaves y profundas que alivian contracturas, mejoran la circulación y reducen el estrés físico y emocional. Ideal para quienes necesitan un respiro en medio de la rutina o buscan aliviar molestias por posturas prolongadas.",
+      "price": "1.500",
+      "duration": "50 minutos"
+    },
+    {
+      "title": "Masaje Corporal Relajante",
+      "description": "Una experiencia integral de bienestar para todo el cuerpo. Este masaje de 60 minutos trabaja de forma armónica cada zona corporal, combinando maniobras suaves y profundas que ayudan a liberar tensiones musculares, mejorar la circulación y favorecer un estado general de calma y equilibrio. Ideal para quienes buscan desconectar del estrés diario y reconectar con la sensación de liviandad y descanso físico.",
+      "price": "1.800",
+      "duration": "60 minutos"
+    },
+    {
+      "title": "Limpieza Profunda en Espalda",
+      "description": "Un tratamiento completo para renovar, equilibrar y cuidar la piel de tu espalda. Comienza con una limpieza y exfoliación profunda, seguida de puntas de diamante para eliminar células muertas y mejorar la textura. Se realizan extracciones localizadas para desobstruir poros y prevenir imperfecciones. Luego se aplica una mascarilla equilibrante y suero específico, finalizando con una hidratación que deja la piel suave, limpia y visiblemente más saludable. Ideal para pieles con tendencia a impurezas o para quienes desean lucir una espalda radiante y cuidada.",
+      "price": "2.000",
+      "duration": "75 minutos"
+    },
+    {
+      "title": "Peeling en Espalda",
+      "description": "Un tratamiento intensivo para renovar la piel de la espalda, mejorar su textura y reducir imperfecciones. Iniciamos con una limpieza profunda y exfoliación, seguida de la aplicación de un peeling químico específico, que actúa sobre manchas, poros obstruidos y piel engrosada. Este procedimiento favorece la regeneración celular, ayuda a disminuir marcas y deja la piel visiblemente más uniforme, suave y luminosa. Finalizamos con productos calmantes e hidratantes para restaurar y proteger la piel tratada. Ideal para pieles con acné, manchas o textura irregular.",
+      "price": "2.500",
+      "duration": "70 minutos"
+    },
+    {
+      "title": "Pack de 8 Sesiones – Radiofrecuencia Corporal",
+      "description": "Reafirmá, tonificá y revitalizá tu piel con este tratamiento corporal avanzado. La radiofrecuencia estimula la producción de colágeno y elastina, mejorando la flacidez, la textura de la piel y la apariencia de la celulitis, de manera no invasiva y progresiva. Podés trabajar zonas específicas como piernas, glúteos, abdomen o brazos, según tus objetivos. Cada sesión tiene una duración de 30 minutos y se recomienda una frecuencia de una sesión cada 7 a 21 días, dependiendo del caso. Un plan ideal para quienes desean resultados visibles y duraderos, mejorando el contorno y firmeza de su cuerpo.",
+      "price": "1.300 por sesión | Pack x8 sesiones: $8.900",
+      "duration": "30 minutos"
+    },
+    {
+      "title": "Pack de 8 Sesiones – Electrodos",
+      "description": "Mejorá el tono y la firmeza de tu cuerpo con este tratamiento localizado, ideal para trabajar una zona específica de forma efectiva y no invasiva. Los electrodos estimulan los músculos mediante corrientes controladas, favoreciendo la tonificación, activación muscular y mejora de la circulación. Es un plan cómodo, seguro y eficaz para acompañar tu rutina estética y lograr resultados visibles. Podés elegir entre piernas, glúteos, abdomen o brazos. Se recomienda una frecuencia de 2 a 3 sesiones por semana para potenciar los efectos.",
+      "price": "4.500 Pack x8 sesiones",
+      "duration": "30 minuto por sesión"
+    }
+  ]
+}
