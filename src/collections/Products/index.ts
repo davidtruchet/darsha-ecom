@@ -50,11 +50,58 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     enableVariants: true,
     gallery: true,
     priceInUSD: true,
+    priceInUYU: true,
+    priceInUYUEnabled: true,
+    brand: true,
+    compareAtPriceInUYU: true,
     inventory: true,
     meta: true,
   },
   fields: [
     { name: 'title', type: 'text', required: true },
+    {
+      name: 'brand',
+      type: 'relationship',
+      relationTo: 'brands',
+      label: 'Marca',
+      admin: { position: 'sidebar' },
+    },
+    { name: 'size', type: 'text', label: 'Presentación' },
+    { name: 'benefits', type: 'textarea', label: 'Beneficios' },
+    { name: 'usageInstructions', type: 'textarea', label: 'Modo de uso' },
+    { name: 'ingredients', type: 'textarea', label: 'Ingredientes' },
+    { name: 'shortDescription', type: 'textarea', label: 'Descripción breve' },
+    {
+      name: 'compareAtPriceInUYU',
+      type: 'number',
+      label: 'Precio original (centésimos UYU)',
+      min: 0,
+      admin: {
+        description:
+          'Opcional: precio anterior a la promoción. El precio de venta es el precio UYU del producto.',
+      },
+      validate: (
+        value: number | null | undefined,
+        { siblingData }: { siblingData: { priceInUYU?: number } },
+      ) => {
+        if (value == null) return true
+        if (!Number.isInteger(value)) return 'Usa un importe entero en centésimos.'
+        const price = (siblingData as { priceInUYU?: number }).priceInUYU
+        return typeof price === 'number' && value > price
+          ? true
+          : 'Debe ser mayor que el precio de venta UYU.'
+      },
+    },
+    {
+      name: 'sourceURL',
+      type: 'text',
+      label: 'Fuente del producto',
+      admin: {
+        description: 'Referencia de la importación inicial; no se sincroniza automáticamente.',
+      },
+    },
+    { name: 'sourceSKU', type: 'text', label: 'Código del proveedor' },
+    { name: 'sourceCapturedAt', type: 'date', label: 'Fecha de consulta del proveedor' },
     {
       type: 'tabs',
       tabs: [

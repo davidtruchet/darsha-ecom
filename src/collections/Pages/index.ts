@@ -1,3 +1,8 @@
+import {
+  DarshaShopIntro,
+  DarshaShopPromotion,
+  DarshaProductCatalog,
+} from '@/blocks/DarshaShop/config'
 import type { CollectionConfig } from 'payload'
 
 import { Banner } from '@/blocks/Banner/config'
@@ -18,7 +23,11 @@ import {
   DarshaImageText,
   DarshaTestimonials,
 } from '@/blocks/Darsha/config'
-import { DarshaBookingCTA, DarshaServicesIntro, DarshaTreatments } from '@/blocks/Darsha/servicesConfig'
+import {
+  DarshaBookingCTA,
+  DarshaServicesIntro,
+  DarshaTreatments,
+} from '@/blocks/Darsha/servicesConfig'
 import { slugField } from 'payload'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import {
@@ -97,6 +106,9 @@ export const Pages: CollectionConfig = {
               name: 'layout',
               type: 'blocks',
               blocks: [
+                DarshaShopIntro,
+                DarshaShopPromotion,
+                DarshaProductCatalog,
                 CallToAction,
                 Content,
                 MediaBlock,

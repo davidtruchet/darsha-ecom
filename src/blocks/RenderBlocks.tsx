@@ -1,3 +1,5 @@
+import { DarshaShopIntroBlock, DarshaShopPromotionBlock } from '@/blocks/DarshaShop/Component'
+import { DarshaProductCatalogBlock, type CatalogSearchParams } from '@/blocks/DarshaShop/Catalog'
 import { ArchiveBlock } from '@/blocks/ArchiveBlock/Component'
 import { BannerBlock } from '@/blocks/Banner/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
@@ -22,6 +24,9 @@ import React, { Fragment } from 'react'
 import type { Page } from '../payload-types'
 
 const blockComponents = {
+  darshaShopIntro: DarshaShopIntroBlock,
+  darshaShopPromotion: DarshaShopPromotionBlock,
+  darshaProductCatalog: DarshaProductCatalogBlock,
   archive: ArchiveBlock,
   banner: BannerBlock,
   carousel: CarouselBlock,
@@ -42,6 +47,7 @@ const blockComponents = {
 
 export const RenderBlocks: React.FC<{
   blocks: Page['layout'][0][]
+  catalogSearchParams?: CatalogSearchParams
 }> = (props) => {
   const { blocks } = props
 
@@ -52,6 +58,16 @@ export const RenderBlocks: React.FC<{
       <Fragment>
         {blocks.map((block, index) => {
           const { blockName, blockType } = block
+
+          if (block.blockType === 'darshaProductCatalog') {
+            return (
+              <DarshaProductCatalogBlock
+                key={index}
+                {...block}
+                catalogSearchParams={props.catalogSearchParams}
+              />
+            )
+          }
 
           if (blockType && blockType in blockComponents) {
             const Block = blockComponents[blockType]

@@ -1,3 +1,4 @@
+import { currenciesConfig } from '@/lib/currencies'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { Plugin } from 'payload'
@@ -20,10 +21,12 @@ const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Espacio Darsha` : 'Espacio Darsha'
 }
 
-const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
+const generateURL: GenerateURL<Product | Page> = ({ doc, collectionConfig }) => {
   const url = getServerSideURL()
 
-  return doc?.slug === 'home' ? url : doc?.slug ? `${url}/${doc.slug}` : url
+  if (!doc?.slug) return url
+  if (collectionConfig?.slug === 'products') return `${url}/products/${doc.slug}`
+  return doc.slug === 'home' ? url : `${url}/${doc.slug}`
 }
 
 export const plugins: Plugin[] = [
@@ -77,6 +80,7 @@ export const plugins: Plugin[] = [
     },
   }),
   ecommercePlugin({
+    currencies: currenciesConfig,
     access: {
       adminOnlyFieldAccess,
       adminOrPublishedStatus,

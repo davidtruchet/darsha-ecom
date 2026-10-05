@@ -1,192 +1,180 @@
-import type { Media, Product } from '@/payload-types'
-
+import type { Media, Product, Variant } from '@/payload-types'
+import type { Metadata } from 'next'
 import { RenderBlocks } from '@/blocks/RenderBlocks'
-import { GridTileImage } from '@/components/Grid/tile'
 import { Gallery } from '@/components/product/Gallery'
 import { ProductDescription } from '@/components/product/ProductDescription'
-import configPromise from '@payload-config'
+import { ProductDetails } from '@/components/product/ProductDetails'
+import { ProductGridItem } from '@/components/ProductGridItem'
+import config from '@payload-config'
 import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import React, { Suspense } from 'react'
-import { Button } from '@/components/ui/button'
-import { ChevronLeftIcon } from 'lucide-react'
-import { Metadata } from 'next'
+import { Suspense } from 'react'
+import { ChevronLeft } from 'lucide-react'
+import { getServerSideURL } from '@/utilities/getURL'
 
-type Args = {
-  params: Promise<{
-    slug: string
-  }>
-}
+export const dynamic = 'force-dynamic'
+type Args = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
-
-  if (!product) return notFound()
-
-  const gallery = product.gallery?.filter((item) => typeof item.image === 'object') || []
-
-  const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const canIndex = product._status === 'published'
-
-  const seoImage = metaImage || (gallery.length ? (gallery[0]?.image as Media) : undefined)
-
+  const product = await queryProductBySlug(slug)
+  if (!product) notFound()
+  const image = product.gallery?.find((item) => item.image && typeof item.image === 'object')?.image
+  const metaImage =
+    product.meta?.image && typeof product.meta.image === 'object' ? product.meta.image : null
+  const seoImage = metaImage || (image && typeof image === 'object' ? image : null)
+  const { isEnabled: draft } = await draftMode()
+  const canIndex = !draft && product._status === 'published'
   return {
-    description: product.meta?.description || '',
+    title: product.meta?.title || `${product.title} | Espacio Darsha`,
+    description: product.meta?.description || product.shortDescription || '',
     openGraph: seoImage?.url
       ? {
           images: [
             {
-              alt: seoImage?.alt,
-              height: seoImage.height!,
-              url: seoImage?.url,
-              width: seoImage.width!,
+              alt: seoImage.alt,
+              url: seoImage.url,
+              width: seoImage.width || undefined,
+              height: seoImage.height || undefined,
             },
           ],
         }
-      : null,
-    robots: {
-      follow: canIndex,
-      googleBot: {
-        follow: canIndex,
-        index: canIndex,
-      },
-      index: canIndex,
-    },
-    title: product.meta?.title || product.title,
+      : undefined,
+    robots: { index: canIndex, follow: canIndex },
   }
 }
 
 export default async function ProductPage({ params }: Args) {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
-
-  if (!product) return notFound()
-
-  const gallery =
-    product.gallery
-      ?.filter((item) => typeof item.image === 'object')
-      .map((item) => ({
-        ...item,
-        image: item.image as Media,
-      })) || []
-
-  const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const hasStock = product.enableVariants
-    ? product?.variants?.docs?.some((variant) => {
-        if (typeof variant !== 'object') return false
-        return variant.inventory && variant?.inventory > 0
+  const product = await queryProductBySlug(slug)
+  if (!product) notFound()
+  const { isEnabled: draft } = await draftMode()
+  const payload = await getPayload({ config })
+  const relatedIDs = (product.relatedProducts || [])
+    .map((item) => (typeof item === 'object' ? item.id : item))
+    .filter((id) => id !== product.id)
+  const relatedResult = relatedIDs.length
+    ? await payload.find({
+        collection: 'products',
+        draft,
+        overrideAccess: draft,
+        depth: 1,
+        pagination: false,
+        where: {
+          and: [
+            { id: { in: relatedIDs } },
+            { slug: { exists: true, not_equals: '' } },
+            { title: { exists: true, not_equals: '' } },
+            ...(!draft ? [{ _status: { equals: 'published' } }] : []),
+          ],
+        },
       })
-    : product.inventory! > 0
-
-  let price = product.priceInUSD
-
-  if (product.enableVariants && product?.variants?.docs?.length) {
-    price = product?.variants?.docs?.reduce((acc, variant) => {
-      if (typeof variant === 'object' && variant?.priceInUSD && acc && variant?.priceInUSD > acc) {
-        return variant.priceInUSD
-      }
-      return acc
-    }, price)
-  }
-
-  const productJsonLd = {
-    name: product.title,
+    : null
+  const related = relatedIDs
+    .map((id) => relatedResult?.docs.find((item) => item.id === id))
+    .filter((item): item is Product => !!item)
+  const gallery = (product.gallery || []).filter(
+    (item) => item.image && typeof item.image === 'object',
+  )
+  const brand = product.brand && typeof product.brand === 'object' ? product.brand : null
+  const image = gallery[0]?.image as Media | undefined
+  const priceOptions = product.enableVariants
+    ? (product.variants?.docs || []).filter(
+        (item): item is Variant => !!item && typeof item === 'object',
+      )
+    : [product]
+  const priced = priceOptions.filter(
+    (item) =>
+      item.priceInUYUEnabled &&
+      typeof item.priceInUYU === 'number' &&
+      Number.isFinite(item.priceInUYU) &&
+      item.priceInUYU >= 0,
+  )
+  const prices = priced.map((item) => item.priceInUYU! / 100)
+  const url = `${getServerSideURL()}/products/${encodeURIComponent(slug)}`
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    description: product.description,
-    image: metaImage?.url,
-    offers: {
-      '@type': 'AggregateOffer',
-      availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      price: price,
-      priceCurrency: 'usd',
-    },
+    name: product.title,
+    description: product.shortDescription || undefined,
+    image: image?.url,
+    url,
+    ...(brand ? { brand: { '@type': 'Brand', name: brand.title } } : {}),
+    ...(prices.length
+      ? {
+          offers: product.enableVariants
+            ? {
+                '@type': 'AggregateOffer',
+                priceCurrency: 'UYU',
+                lowPrice: Math.min(...prices),
+                highPrice: Math.max(...prices),
+                offerCount: prices.length,
+                url,
+              }
+            : {
+                '@type': 'Offer',
+                priceCurrency: 'UYU',
+                price: prices[0],
+                url,
+                availability:
+                  product._status === 'published' && (product.inventory || 0) > 0
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+              },
+        }
+      : {}),
   }
 
-  const relatedProducts =
-    product.relatedProducts?.filter((relatedProduct) => typeof relatedProduct === 'object') ?? []
-
   return (
-    <React.Fragment>
+    <article className="bg-[#fafaf9] text-[#3D393A]">
       <script
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
         type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
-      <div className="container pt-8 pb-8">
-        <Button asChild variant="ghost" className="mb-4">
-          <Link href="/shop">
-            <ChevronLeftIcon />
-            All products
-          </Link>
-        </Button>
-        <div className="flex flex-col gap-12 rounded-lg border p-8 md:py-12 lg:flex-row lg:gap-8 bg-primary-foreground">
-          <div className="h-full w-full basis-full lg:basis-1/2">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
-              }
-            >
-              {Boolean(gallery?.length) && <Gallery gallery={gallery} />}
-            </Suspense>
-          </div>
-
-          <div className="basis-full lg:basis-1/2">
+      <div className="darsha-container py-10 md:py-16">
+        <Link
+          href="/shop#catalogo"
+          className="mb-8 inline-flex items-center gap-2 text-sm underline underline-offset-4"
+        >
+          <ChevronLeft aria-hidden className="size-4" />
+          Volver a la tienda
+        </Link>
+        {draft && (
+          <p className="mb-8 rounded border border-[#D1C7C0] p-3 text-sm">
+            Vista previa del producto. Los productos en borrador no están disponibles para la
+            compra.
+          </p>
+        )}
+        <div className="grid items-start gap-10 md:grid-cols-2 md:gap-12">
+          <Suspense fallback={<div className="aspect-square rounded-lg bg-white" />}>
+            <Gallery gallery={gallery} title={product.title} />
+          </Suspense>
+          <Suspense fallback={null}>
             <ProductDescription product={product} />
-          </div>
+          </Suspense>
         </div>
+        <ProductDetails product={product} />
       </div>
-
-      {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : <></>}
-
-      {relatedProducts.length ? (
-        <div className="container">
-          <RelatedProducts products={relatedProducts as Product[]} />
-        </div>
-      ) : (
-        <></>
+      {!!product.layout?.length && <RenderBlocks blocks={product.layout} />}
+      {!!related.length && (
+        <section className="darsha-container pb-16">
+          <h2 className="font-darsha-serif mb-8 text-3xl">También te puede interesar</h2>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((item) => (
+              <ProductGridItem key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
       )}
-    </React.Fragment>
+    </article>
   )
 }
 
-function RelatedProducts({ products }: { products: Product[] }) {
-  if (!products.length) return null
-
-  return (
-    <div className="py-8">
-      <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
-      <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {products.map((product) => (
-          <li
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            key={product.id}
-          >
-            <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
-              <GridTileImage
-                label={{
-                  amount: product.priceInUSD!,
-                  title: product.title,
-                }}
-                media={product.meta?.image as Media}
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-const queryProductBySlug = async ({ slug }: { slug: string }) => {
+async function queryProductBySlug(slug: string) {
   const { isEnabled: draft } = await draftMode()
-
-  const payload = await getPayload({ config: configPromise })
-
+  const payload = await getPayload({ config })
   const result = await payload.find({
     collection: 'products',
     depth: 3,
@@ -195,24 +183,17 @@ const queryProductBySlug = async ({ slug }: { slug: string }) => {
     overrideAccess: draft,
     pagination: false,
     where: {
-      and: [
-        {
-          slug: {
-            equals: slug,
-          },
-        },
-        ...(draft ? [] : [{ _status: { equals: 'published' } }]),
-      ],
+      and: [{ slug: { equals: slug } }, ...(!draft ? [{ _status: { equals: 'published' } }] : [])],
     },
     populate: {
       variants: {
         title: true,
-        priceInUSD: true,
+        priceInUYU: true,
+        priceInUYUEnabled: true,
         inventory: true,
         options: true,
       },
     },
   })
-
-  return result.docs?.[0] || null
+  return result.docs[0] || null
 }

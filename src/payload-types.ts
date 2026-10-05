@@ -75,6 +75,7 @@ export interface Config {
     users: User;
     pages: Page;
     categories: Category;
+    brands: Brand;
     media: Media;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -108,6 +109,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    brands: BrandsSelect<false> | BrandsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -254,7 +256,7 @@ export interface Order {
   transactions?: (number | Transaction)[] | null;
   status?: OrderStatus;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('UYU' | 'USD') | null;
   accessToken?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -266,6 +268,22 @@ export interface Order {
 export interface Product {
   id: number;
   title: string;
+  brand?: (number | null) | Brand;
+  size?: string | null;
+  benefits?: string | null;
+  usageInstructions?: string | null;
+  ingredients?: string | null;
+  shortDescription?: string | null;
+  /**
+   * Opcional: precio anterior a la promoción. El precio de venta es el precio UYU del producto.
+   */
+  compareAtPriceInUYU?: number | null;
+  /**
+   * Referencia de la importación inicial; no se sincroniza automáticamente.
+   */
+  sourceURL?: string | null;
+  sourceSKU?: string | null;
+  sourceCapturedAt?: string | null;
   description?: {
     root: {
       type: string;
@@ -297,6 +315,8 @@ export interface Product {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  priceInUYUEnabled?: boolean | null;
+  priceInUYU?: number | null;
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
   relatedProducts?: (number | Product)[] | null;
@@ -318,6 +338,21 @@ export interface Product {
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -477,6 +512,30 @@ export interface Page {
     media?: (number | null) | Media;
   };
   layout: (
+    | {
+        heading: string;
+        intro: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaShopIntro';
+      }
+    | {
+        heading: string;
+        description?: string | null;
+        linkLabel?: string | null;
+        linkURL?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaShopPromotion';
+      }
+    | {
+        heading: string;
+        pageSize: number;
+        emptyMessage: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaProductCatalog';
+      }
     | CallToActionBlock
     | ContentBlock
     | MediaBlock
@@ -987,6 +1046,8 @@ export interface Variant {
   product: number | Product;
   options: (number | VariantOption)[];
   inventory?: number | null;
+  priceInUYUEnabled?: boolean | null;
+  priceInUYU?: number | null;
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
   updatedAt: string;
@@ -1032,7 +1093,7 @@ export interface Transaction {
   order?: (number | null) | Order;
   cart?: (number | null) | Cart;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('UYU' | 'USD') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1055,7 +1116,7 @@ export interface Cart {
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('UYU' | 'USD') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1172,6 +1233,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'brands';
+        value: number | Brand;
       } | null)
     | ({
         relationTo: 'media';
@@ -1318,6 +1383,33 @@ export interface PagesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
+        darshaShopIntro?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaShopPromotion?:
+          | T
+          | {
+              heading?: T;
+              description?: T;
+              linkLabel?: T;
+              linkURL?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaProductCatalog?:
+          | T
+          | {
+              heading?: T;
+              pageSize?: T;
+              emptyMessage?: T;
+              id?: T;
+              blockName?: T;
+            };
         cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
@@ -1585,6 +1677,17 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -1780,6 +1883,8 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
+  priceInUYUEnabled?: T;
+  priceInUYU?: T;
   priceInUSDEnabled?: T;
   priceInUSD?: T;
   updatedAt?: T;
@@ -1818,6 +1923,16 @@ export interface VariantOptionsSelect<T extends boolean = true> {
  */
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
+  brand?: T;
+  size?: T;
+  benefits?: T;
+  usageInstructions?: T;
+  ingredients?: T;
+  shortDescription?: T;
+  compareAtPriceInUYU?: T;
+  sourceURL?: T;
+  sourceSKU?: T;
+  sourceCapturedAt?: T;
   description?: T;
   gallery?:
     | T
@@ -1837,6 +1952,8 @@ export interface ProductsSelect<T extends boolean = true> {
   enableVariants?: T;
   variantTypes?: T;
   variants?: T;
+  priceInUYUEnabled?: T;
+  priceInUYU?: T;
   priceInUSDEnabled?: T;
   priceInUSD?: T;
   relatedProducts?: T;
