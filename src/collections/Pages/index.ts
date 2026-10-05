@@ -18,6 +18,7 @@ import {
   DarshaImageText,
   DarshaTestimonials,
 } from '@/blocks/Darsha/config'
+import { DarshaBookingCTA, DarshaServicesIntro, DarshaTreatments } from '@/blocks/Darsha/servicesConfig'
 import { slugField } from 'payload'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import {
@@ -109,6 +110,9 @@ export const Pages: CollectionConfig = {
                 DarshaImageText,
                 DarshaTestimonials,
                 DarshaContact,
+                DarshaServicesIntro,
+                DarshaTreatments,
+                DarshaBookingCTA,
               ],
               required: true,
             },

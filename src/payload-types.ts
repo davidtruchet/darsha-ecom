@@ -552,6 +552,48 @@ export interface Page {
         blockName?: string | null;
         blockType: 'darshaContact';
       }
+    | {
+        heading: string;
+        intro: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaServicesIntro';
+      }
+    | {
+        sectionId: 'faciales' | 'corporales';
+        heading: string;
+        intro: string;
+        image: number | Media;
+        imageSide: 'right' | 'left';
+        background: 'white' | 'beige' | 'warmWhite';
+        /**
+         * Los precios configurados permanecen ocultos hasta activar esta opción.
+         */
+        showPrices?: boolean | null;
+        treatments?:
+          | {
+              title: string;
+              description: string;
+              duration: string;
+              frequency?: string | null;
+              price?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        bookingLabel: string;
+        bookingURL: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaTreatments';
+      }
+    | {
+        heading: string;
+        bookingLabel: string;
+        bookingURL: string;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'darshaBookingCTA';
+      }
   )[];
   meta?: {
     title?: string | null;
@@ -1353,6 +1395,48 @@ export interface PagesSelect<T extends boolean = true> {
                     url?: T;
                     id?: T;
                   };
+              id?: T;
+              blockName?: T;
+            };
+        darshaServicesIntro?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaTreatments?:
+          | T
+          | {
+              sectionId?: T;
+              heading?: T;
+              intro?: T;
+              image?: T;
+              imageSide?: T;
+              background?: T;
+              showPrices?: T;
+              treatments?:
+                | T
+                | {
+                    title?: T;
+                    description?: T;
+                    duration?: T;
+                    frequency?: T;
+                    price?: T;
+                    id?: T;
+                  };
+              bookingLabel?: T;
+              bookingURL?: T;
+              id?: T;
+              blockName?: T;
+            };
+        darshaBookingCTA?:
+          | T
+          | {
+              heading?: T;
+              bookingLabel?: T;
+              bookingURL?: T;
               id?: T;
               blockName?: T;
             };
