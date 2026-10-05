@@ -36,6 +36,12 @@ The quantity selector is capped by inventory minus units already in the cart for
 
 Focused checks: `pnpm exec vitest run tests/int/product-purchase.int.spec.ts tests/int/add-to-cart.int.spec.ts`. These cover unknown and disabled prices, stock limits, variant selection, cart quantities and success/failure confirmation. Payment integration remains deferred.
 
-## Next phase: cart
+## Cart
 
-Continue on `codex/darsha-shop-landing` with the cart interface: Darsha styling and Spanish labels, UYU item prices and totals, quantity changes/removal, empty state, persistence and clear stock/API error feedback. The shop and product detail pages are ready for review; the 12 imported sample products are still drafts with zero confirmed stock, and Lidherma prices remain unset. Test purchases require published products with a configured UYU price and Darsha inventory. Payment integration stays outside this next phase.
+The header drawer and `/cart` page share a Spanish cart view with Darsha styling, optimized product images, brand/presentation/variant information, UYU unit and line prices, subtotal, quantity controls and removal. Increasing quantities respects inventory; unavailable or unpriced items remain removable. Unknown prices are excluded from a clearly labeled partial subtotal. Guest carts use Payload's local-storage persistence. Cart population explicitly includes price, publication and variant fields so refreshes preserve the display. Restoring or modifying a cart fetches current product data; failed provider mutations are detected from the resulting quantities. Error recovery reloads the page so Payload restores guest carts with their access token; its manual refresh method omits that token in the installed version.
+
+The primary action is “Continuar comprando”; checkout and payment integration are deferred. Delivery charges are not calculated yet.
+
+For development testing, the user authorized publication of all 12 sample products and 10 test units for each of the six priced Germaine products. This was applied to the configured database. Lidherma products remain unpriced and cannot be purchased. `src/scripts/prepare-darsha-test-catalog.ts` records this explicit development setup; rerunning it resets priced sample stock to 10. Replace test stock with confirmed real inventory before launch.
+
+Focused checks: `pnpm exec vitest run tests/int/cart.int.spec.ts tests/int/product-purchase.int.spec.ts tests/int/add-to-cart.int.spec.ts`.

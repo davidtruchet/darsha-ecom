@@ -19,6 +19,7 @@ export const Providers: React.FC<{
           <EcommerceProvider
             currenciesConfig={currenciesConfig}
             enableVariants={true}
+            syncLocalStorage={true}
             api={{
               cartsFetchQuery: {
                 depth: 2,
@@ -27,10 +28,19 @@ export const Providers: React.FC<{
                     slug: true,
                     title: true,
                     gallery: true,
+                    brand: true,
+                    size: true,
+                    _status: true,
+                    enableVariants: true,
+                    priceInUYU: true,
+                    priceInUYUEnabled: true,
                     inventory: true,
                   },
                   variants: {
                     title: true,
+                    options: true,
+                    priceInUYU: true,
+                    priceInUYUEnabled: true,
                     inventory: true,
                   },
                 },
