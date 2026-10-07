@@ -1,447 +1,473 @@
 'use client'
 
-import { Media } from '@/components/Media'
-import { Message } from '@/components/Message'
-import { Price } from '@/components/Price'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useAuth } from '@/providers/Auth'
-import { useTheme } from '@/providers/Theme'
-import { Elements } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
+import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
+import { useShipping } from '@/providers/Shipping'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import React, { Suspense, useCallback, useEffect, useState } from 'react'
+import {
+  formatCheckoutPhone,
+  normalizeCheckoutPhone,
+  type PhoneCountry,
+} from '@/utilities/checkoutPhone'
+import { uruguayDepartments, type ShippingQuote } from '@/utilities/shippingQuote'
+import { summarizeCart } from '@/utilities/cartSummary'
+import { formatUYU } from '@/lib/currencies'
+import type { CheckoutContact, CheckoutDelivery } from '@/lib/checkout/types'
 
-import { cssVariables } from '@/cssVariables'
-import { CheckoutForm } from '@/components/forms/CheckoutForm'
-import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
-import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
-import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
-import { Address } from '@/payload-types'
-import { Checkbox } from '@/components/ui/checkbox'
-import { AddressItem } from '@/components/addresses/AddressItem'
-import { FormItem } from '@/components/forms/FormItem'
-import { toast } from 'sonner'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
-
-const apiKey = `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`
-const stripe = loadStripe(apiKey)
-
-export const CheckoutPage: React.FC = () => {
-  const { user } = useAuth()
-  const router = useRouter()
-  const { cart } = useCart()
-  const [error, setError] = useState<null | string>(null)
-  const { theme } = useTheme()
-  /**
-   * State to manage the email input for guest checkout.
-   */
-  const [email, setEmail] = useState('')
-  const [emailEditable, setEmailEditable] = useState(true)
-  const [paymentData, setPaymentData] = useState<null | Record<string, unknown>>(null)
-  const { initiatePayment } = usePayments()
-  const { addresses } = useAddresses()
-  const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
-  const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
-  const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
-  const [isProcessingPayment, setProcessingPayment] = useState(false)
-
-  const cartIsEmpty = !cart || !cart.items || !cart.items.length
-
-  const canGoToPayment = Boolean(
-    (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
-  )
-
-  // On initial load wait for addresses to be loaded and check to see if we can prefill a default one
-  useEffect(() => {
-    if (!shippingAddress) {
-      if (addresses && addresses.length > 0) {
-        const defaultAddress = addresses[0]
-        if (defaultAddress) {
-          setBillingAddress(defaultAddress)
-        }
-      }
+export function CheckoutPage({
+  pickupAddress,
+  pickupHours,
+}: {
+  pickupAddress?: string | null
+  pickupHours?: string | null
+}) {
+  const { cart, isLoading } = useCart()
+  const { destination, setDestination } = useShipping()
+  const [contact, setContact] = useState<CheckoutContact>({ name: '', email: '', phone: '' })
+  const [phoneCountry, setPhoneCountry] = useState<PhoneCountry>('UY')
+  const [address, setAddress] = useState({ street: '', number: '', apartment: '', notes: '' })
+  const [payment, setPayment] = useState('mercadopago')
+  const [quote, setQuote] = useState<{ key: string; result: ShippingQuote } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const phoneInput = useRef<HTMLInputElement>(null)
+  const request = useRef<{ key: string; id: string } | null>(null)
+  const { subtotal, incomplete, lines } = summarizeCart(cart?.items || [])
+  const key = JSON.stringify([cart?.updatedAt, cart?.items, destination])
+  const shipping = quote?.key === key ? quote.result : null
+  const method = destination.method === 'delivery' ? 'mercadopago' : payment
+  const delivery: CheckoutDelivery = { ...destination, ...address }
+  const field = 'mt-1 w-full rounded-sm border border-[#3D393A]/30 bg-[#fafaf9] p-3'
+  async function post(path: string, extra: Record<string, unknown>) {
+    let secret = null
+    try {
+      secret = localStorage.getItem('cart_secret')
+    } catch {
+      /* Use session cookies if available. */
     }
-  }, [addresses])
-
-  useEffect(() => {
-    return () => {
-      setShippingAddress(undefined)
-      setBillingAddress(undefined)
-      setBillingAddressSameAsShipping(true)
-      setEmail('')
-      setEmailEditable(true)
+    const response = await fetch(path, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cartID: cart?.id, secret, ...extra }),
+    })
+    const body = await response.json()
+    if (!response.ok) throw new Error(body.message || 'No pudimos procesar la solicitud.')
+    return body
+  }
+  async function estimate() {
+    setBusy(true)
+    setError(null)
+    try {
+      setQuote({ key, result: await post('/api/shipping/quote', { destination }) })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No pudimos calcular el envío.')
+    } finally {
+      setBusy(false)
     }
-  }, [])
-
-  const initiatePaymentIntent = useCallback(
-    async (paymentID: string) => {
-      try {
-        const paymentData = (await initiatePayment(paymentID, {
-          additionalData: {
-            ...(email ? { customerEmail: email } : {}),
-            billingAddress,
-            shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
-          },
-        })) as Record<string, unknown>
-
-        if (paymentData) {
-          setPaymentData(paymentData)
-        }
-      } catch (error) {
-        const errorData = error instanceof Error ? JSON.parse(error.message) : {}
-        let errorMessage = 'An error occurred while initiating payment.'
-
-        if (errorData?.cause?.code === 'OutOfStock') {
-          errorMessage = 'One or more items in your cart are out of stock.'
-        }
-
-        setError(errorMessage)
-        toast.error(errorMessage)
-      }
-    },
-    [billingAddress, billingAddressSameAsShipping, shippingAddress],
-  )
-
-  if (!stripe) return null
-
-  if (cartIsEmpty && isProcessingPayment) {
-    return (
-      <div className="py-12 w-full items-center justify-center">
-        <div className="prose dark:prose-invert text-center max-w-none self-center mb-8">
-          <p>Processing your payment...</p>
-        </div>
-        <LoadingSpinner />
-      </div>
-    )
   }
-
-  if (cartIsEmpty) {
-    return (
-      <div className="prose dark:prose-invert py-12 w-full items-center">
-        <p>Your cart is empty.</p>
-        <Link href="/search">Continue shopping?</Link>
-      </div>
-    )
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      const phone = normalizeCheckoutPhone(contact.phone, phoneCountry)
+      if (!phone) throw new Error('Ingresa un teléfono válido de Uruguay o Argentina.')
+      const normalizedContact = { ...contact, phone }
+      const requestKey = JSON.stringify([key, normalizedContact, delivery, method])
+      if (request.current?.key !== requestKey)
+        request.current = { key: requestKey, id: crypto.randomUUID() }
+      const result = await post('/api/checkout/initiate', {
+        contact: normalizedContact,
+        delivery,
+        method,
+        requestID: request.current.id,
+        expectedAmount: shipping?.available ? subtotal + shipping.amount : undefined,
+      })
+      if (!result.redirectURL) throw new Error('No recibimos la dirección de pago.')
+      const target = new URL(result.redirectURL, window.location.origin)
+      if (
+        target.origin !== window.location.origin &&
+        (!['www.mercadopago.com.uy', 'www.mercadopago.com', 'www.mercadopago.com.ar'].includes(
+          target.hostname,
+        ) ||
+          target.protocol !== 'https:')
+      )
+        throw new Error('Dirección de pago inválida.')
+      window.location.assign(target.href)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No pudimos iniciar la compra.')
+      setBusy(false)
+    }
   }
-
   return (
-    <div className="flex flex-col items-stretch justify-stretch my-8 md:flex-row grow gap-10 md:gap-6 lg:gap-8">
-      <div className="basis-full lg:basis-2/3 flex flex-col gap-8 justify-stretch">
-        <h2 className="font-medium text-3xl">Contact</h2>
-        {!user && (
-          <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
-            <div className="prose dark:prose-invert">
-              <Button asChild className="no-underline text-inherit" variant="outline">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <p className="mt-0">
-                <span className="mx-2">or</span>
-                <Link href="/create-account">create an account</Link>
-              </p>
-            </div>
-          </div>
-        )}
-        {user ? (
-          <div className="bg-accent dark:bg-card rounded-lg p-4 ">
-            <div>
-              <p>{user.email}</p>{' '}
-              <p>
-                Not you?{' '}
-                <Link className="underline" href="/logout">
-                  Log out
-                </Link>
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-accent dark:bg-black rounded-lg p-4 ">
-            <div>
-              <p className="mb-4">Enter your email to checkout as a guest.</p>
-
-              <FormItem className="mb-6">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  disabled={!emailEditable}
-                  id="email"
-                  name="email"
-                  onChange={(e) => setEmail(e.target.value)}
+    <section className="darsha-container py-12 text-[#3D393A] md:py-20">
+      <Link href="/cart" className="text-sm underline">
+        Volver al carrito
+      </Link>
+      <h1 className="my-6 font-darsha-serif text-4xl md:text-5xl">Finalizar compra</h1>
+      {!cart?.items?.length ? (
+        <p>
+          {isLoading ? 'Cargando tu carrito…' : 'Tu carrito está vacío.'}{' '}
+          <Link href="/shop" className="underline">
+            Visitar la tienda
+          </Link>
+        </p>
+      ) : (
+        <form
+          onSubmit={submit}
+          className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]"
+        >
+          <div className="space-y-8 rounded-sm bg-[#E8E3DD] p-6">
+            <fieldset disabled={busy} className="space-y-4">
+              <legend className="mb-4 font-darsha-serif text-2xl">Tus datos</legend>
+              <label className="block text-sm" htmlFor="checkout-name">
+                Nombre y apellido
+                <input
+                  id="checkout-name"
+                  name="name"
+                  autoComplete="name"
+                  type="text"
                   required
-                  type="email"
+                  maxLength={150}
+                  className={field}
+                  value={contact.name}
+                  onChange={(event) => setContact({ ...contact, name: event.target.value })}
                 />
-              </FormItem>
-
-              <Button
-                disabled={!email || !emailEditable}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setEmailEditable(false)
-                }}
-                variant="default"
-              >
-                Continue as guest
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <h2 className="font-medium text-3xl">Address</h2>
-
-        {billingAddress ? (
-          <div>
-            <AddressItem
-              actions={
-                <Button
-                  variant={'outline'}
-                  disabled={Boolean(paymentData)}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setBillingAddress(undefined)
+              </label>
+              <label className="block text-sm" htmlFor="checkout-email">
+                Email
+                <input
+                  id="checkout-email"
+                  name="email"
+                  autoComplete="email"
+                  type="email"
+                  required
+                  maxLength={254}
+                  className={field}
+                  value={contact.email}
+                  onChange={(event) => setContact({ ...contact, email: event.target.value })}
+                />
+              </label>
+              <label className="block text-sm" htmlFor="checkout-phone-country">
+                País del teléfono
+                <select
+                  id="checkout-phone-country"
+                  name="phone-country"
+                  autoComplete="off"
+                  className={`${field} darsha-select`}
+                  value={phoneCountry}
+                  onChange={(event) => {
+                    setPhoneCountry(event.target.value as PhoneCountry)
+                    phoneInput.current?.setCustomValidity('')
+                    setContact({ ...contact, phone: '' })
                   }}
                 >
-                  Remove
-                </Button>
-              }
-              address={billingAddress}
-            />
-          </div>
-        ) : user ? (
-          <CheckoutAddresses heading="Billing address" setAddress={setBillingAddress} />
-        ) : (
-          <CreateAddressModal
-            disabled={!email || Boolean(emailEditable)}
-            callback={(address) => {
-              setBillingAddress(address)
-            }}
-            skipSubmission={true}
-          />
-        )}
-
-        <div className="flex gap-4 items-center">
-          <Checkbox
-            id="shippingTheSameAsBilling"
-            checked={billingAddressSameAsShipping}
-            disabled={Boolean(paymentData || (!user && (!email || Boolean(emailEditable))))}
-            onCheckedChange={(state) => {
-              setBillingAddressSameAsShipping(state as boolean)
-            }}
-          />
-          <Label htmlFor="shippingTheSameAsBilling">Shipping is the same as billing</Label>
-        </div>
-
-        {!billingAddressSameAsShipping && (
-          <>
-            {shippingAddress ? (
-              <div>
-                <AddressItem
-                  actions={
-                    <Button
-                      variant={'outline'}
-                      disabled={Boolean(paymentData)}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setShippingAddress(undefined)
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  }
-                  address={shippingAddress}
-                />
-              </div>
-            ) : user ? (
-              <CheckoutAddresses
-                heading="Shipping address"
-                description="Please select a shipping address."
-                setAddress={setShippingAddress}
-              />
-            ) : (
-              <CreateAddressModal
-                callback={(address) => {
-                  setShippingAddress(address)
-                }}
-                disabled={!email || Boolean(emailEditable)}
-                skipSubmission={true}
-              />
-            )}
-          </>
-        )}
-
-        {!paymentData && (
-          <Button
-            className="self-start"
-            disabled={!canGoToPayment}
-            onClick={(e) => {
-              e.preventDefault()
-              void initiatePaymentIntent('stripe')
-            }}
-          >
-            Go to payment
-          </Button>
-        )}
-
-        {!paymentData?.['clientSecret'] && error && (
-          <div className="my-8">
-            <Message error={error} />
-
-            <Button
-              onClick={(e) => {
-                e.preventDefault()
-                router.refresh()
-              }}
-              variant="default"
-            >
-              Try again
-            </Button>
-          </div>
-        )}
-
-        <Suspense fallback={<React.Fragment />}>
-          {/* @ts-ignore */}
-          {paymentData && paymentData?.['clientSecret'] && (
-            <div className="pb-16">
-              <h2 className="font-medium text-3xl">Payment</h2>
-              {error && <p>{`Error: ${error}`}</p>}
-              <Elements
-                options={{
-                  appearance: {
-                    theme: 'stripe',
-                    variables: {
-                      borderRadius: '6px',
-                      colorPrimary: '#858585',
-                      gridColumnSpacing: '20px',
-                      gridRowSpacing: '20px',
-                      colorBackground: theme === 'dark' ? '#0a0a0a' : cssVariables.colors.base0,
-                      colorDanger: cssVariables.colors.error500,
-                      colorDangerText: cssVariables.colors.error500,
-                      colorIcon:
-                        theme === 'dark' ? cssVariables.colors.base0 : cssVariables.colors.base1000,
-                      colorText: theme === 'dark' ? '#858585' : cssVariables.colors.base1000,
-                      colorTextPlaceholder: '#858585',
-                      fontFamily: 'Geist, sans-serif',
-                      fontSizeBase: '16px',
-                      fontWeightBold: '600',
-                      fontWeightNormal: '500',
-                      spacingUnit: '4px',
-                    },
-                  },
-                  clientSecret: paymentData['clientSecret'] as string,
-                }}
-                stripe={stripe}
-              >
-                <div className="flex flex-col gap-8">
-                  <CheckoutForm
-                    customerEmail={email}
-                    billingAddress={billingAddress}
-                    setProcessingPayment={setProcessingPayment}
-                  />
-                  <Button
-                    variant="ghost"
-                    className="self-start"
-                    onClick={() => setPaymentData(null)}
-                  >
-                    Cancel payment
-                  </Button>
-                </div>
-              </Elements>
-            </div>
-          )}
-        </Suspense>
-      </div>
-
-      {!cartIsEmpty && (
-        <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 border-none bg-primary/5 flex flex-col gap-8 rounded-lg">
-          <h2 className="text-3xl font-medium">Your cart</h2>
-          {cart?.items?.map((item, index) => {
-            if (typeof item.product === 'object' && item.product) {
-              const {
-                product,
-                product: { id, meta, title, gallery },
-                quantity,
-                variant,
-              } = item
-
-              if (!quantity) return null
-
-              let image = gallery?.[0]?.image || meta?.image
-              let price = product?.priceInUYU
-
-              const isVariant = Boolean(variant) && typeof variant === 'object'
-
-              if (isVariant) {
-                price = variant?.priceInUYU
-
-                const imageVariant = product.gallery?.find(
-                  (item: {
-                    variantOption?: { id: number | string } | number | string | null
-                    image?: unknown
-                  }) => {
-                    if (!item.variantOption) return false
-                    const variantOptionID =
-                      typeof item.variantOption === 'object'
-                        ? item.variantOption.id
-                        : item.variantOption
-
-                    const hasMatch = variant?.options?.some(
-                      (option: { id: number | string; label?: string } | number | string) => {
-                        if (typeof option === 'object') return option.id === variantOptionID
-                        else return option === variantOptionID
-                      },
+                  <option value="UY">Uruguay (+598)</option>
+                  <option value="AR">Argentina (+54)</option>
+                </select>
+              </label>
+              <label className="block text-sm" htmlFor="checkout-phone">
+                Teléfono
+                <input
+                  id="checkout-phone"
+                  ref={phoneInput}
+                  name="phone"
+                  autoComplete="tel"
+                  type="tel"
+                  required
+                  maxLength={30}
+                  className={field}
+                  value={contact.phone}
+                  aria-describedby="checkout-phone-help"
+                  placeholder={phoneCountry === 'UY' ? '099 123 456' : '+54 9 11 2345 6789'}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    if (value.startsWith('+54')) setPhoneCountry('AR')
+                    else if (value.startsWith('+598')) setPhoneCountry('UY')
+                    event.target.setCustomValidity('')
+                    const formatted = formatCheckoutPhone(value, phoneCountry)
+                    // Let Backspace remove separators instead of immediately inserting them again.
+                    setContact({
+                      ...contact,
+                      phone:
+                        value.length < contact.phone.length && formatted === contact.phone
+                          ? value
+                          : formatted,
+                    })
+                  }}
+                  onBlur={(event) => {
+                    event.target.setCustomValidity(
+                      contact.phone && !normalizeCheckoutPhone(contact.phone, phoneCountry)
+                        ? 'Ingresa un teléfono válido de Uruguay o Argentina.'
+                        : '',
                     )
-
-                    return hasMatch
-                  },
-                )
-
-                if (imageVariant && typeof imageVariant.image !== 'string') {
-                  image = imageVariant.image
-                }
-              }
-
-              return (
-                <div className="flex items-start gap-4" key={index}>
-                  <div className="flex items-stretch justify-stretch h-20 w-20 p-2 rounded-lg border">
-                    <div className="relative w-full h-full">
-                      {image && typeof image !== 'string' && (
-                        <Media className="" fill imgClassName="rounded-lg" resource={image} />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex grow justify-between items-center">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-medium text-lg">{title}</p>
-                      {variant && typeof variant === 'object' && (
-                        <p className="text-sm font-mono text-primary/50 tracking-widest">
-                          {variant.options
-                            ?.map((option: { label?: string } | number | string) => {
-                              if (typeof option === 'object') return option.label
-                              return null
-                            })
-                            .join(', ')}
-                        </p>
-                      )}
-                      <div>
-                        {'x'}
-                        {quantity}
-                      </div>
-                    </div>
-
-                    {typeof price === 'number' && <Price amount={price} />}
-                  </div>
+                  }}
+                />
+              </label>
+              <p id="checkout-phone-help" className="text-xs">
+                Aceptamos celulares y teléfonos fijos. Puedes pegar el número con +598 o +54.
+              </p>
+            </fieldset>
+            <fieldset disabled={busy} className="space-y-4">
+              <legend className="mb-4 font-darsha-serif text-2xl">Entrega o retiro</legend>
+              <label className="block text-sm" htmlFor="checkout-delivery-method">
+                Método de entrega
+                <select
+                  id="checkout-delivery-method"
+                  name="delivery-method"
+                  autoComplete="off"
+                  className={`${field} darsha-select`}
+                  value={destination.method}
+                  onChange={(event) =>
+                    setDestination({
+                      ...destination,
+                      method: event.target.value as 'pickup' | 'delivery',
+                    })
+                  }
+                >
+                  <option value="pickup">Retiro gratis en Darsha</option>
+                  <option value="delivery">Entrega a domicilio</option>
+                </select>
+              </label>
+              {destination.method === 'pickup' ? (
+                <div className="space-y-2 text-sm">
+                  <p>Te avisaremos cuando esté pronto para retirar.</p>
+                  {pickupAddress && <p>{pickupAddress}</p>}
+                  {pickupHours && <p>{pickupHours}</p>}
                 </div>
-              )
-            }
-            return null
-          })}
-          <hr />
-          <div className="flex justify-between items-center gap-2">
-            <span className="uppercase">Total</span>{' '}
-            <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
+              ) : (
+                <>
+                  <label className="block text-sm" htmlFor="checkout-department">
+                    Departamento
+                    <select
+                      id="checkout-department"
+                      name="department"
+                      autoComplete="shipping address-level1"
+                      required
+                      className={`${field} darsha-select`}
+                      value={destination.department}
+                      onChange={(event) =>
+                        setDestination({
+                          ...destination,
+                          department: event.target.value,
+                          locality: '',
+                        })
+                      }
+                    >
+                      <option value="">Seleccionar departamento</option>
+                      {uruguayDepartments.map((name) => (
+                        <option key={name}>{name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm" htmlFor="checkout-locality">
+                    Localidad
+                    <input
+                      id="checkout-locality"
+                      name="locality"
+                      autoComplete="shipping address-level2"
+                      type="text"
+                      required
+                      maxLength={150}
+                      className={field}
+                      value={destination.locality}
+                      onChange={(event) =>
+                        setDestination({ ...destination, locality: event.target.value })
+                      }
+                    />
+                  </label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm" htmlFor="checkout-street">
+                      Calle
+                      <input
+                        id="checkout-street"
+                        name="street"
+                        autoComplete="shipping address-line1"
+                        type="text"
+                        required
+                        maxLength={150}
+                        className={field}
+                        value={address.street}
+                        onChange={(event) => setAddress({ ...address, street: event.target.value })}
+                      />
+                    </label>
+                    <label className="block text-sm" htmlFor="checkout-street-number">
+                      Número de puerta
+                      <input
+                        id="checkout-street-number"
+                        name="street-number"
+                        autoComplete="off"
+                        type="text"
+                        inputMode="text"
+                        required
+                        maxLength={30}
+                        className={field}
+                        value={address.number}
+                        onChange={(event) => setAddress({ ...address, number: event.target.value })}
+                      />
+                    </label>
+                  </div>
+                  <label className="block text-sm" htmlFor="checkout-apartment">
+                    Apartamento (opcional)
+                    <input
+                      id="checkout-apartment"
+                      name="apartment"
+                      autoComplete="shipping address-line2"
+                      type="text"
+                      maxLength={30}
+                      className={field}
+                      value={address.apartment}
+                      onChange={(event) =>
+                        setAddress({ ...address, apartment: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="block text-sm" htmlFor="checkout-delivery-notes">
+                    Referencias para la entrega (opcional)
+                    <textarea
+                      id="checkout-delivery-notes"
+                      name="delivery-notes"
+                      autoComplete="off"
+                      maxLength={500}
+                      className={field}
+                      value={address.notes}
+                      onChange={(event) => setAddress({ ...address, notes: event.target.value })}
+                    />
+                  </label>
+                  <p className="text-sm">
+                    Entrega gratis en Punta del Este y Maldonado. En otras localidades enviamos por
+                    UES Xpres.
+                  </p>
+                </>
+              )}
+              <button
+                type="button"
+                disabled={
+                  busy ||
+                  (destination.method === 'delivery' &&
+                    (!destination.department || !destination.locality.trim()))
+                }
+                onClick={estimate}
+                className="border border-[#3D393A] px-4 py-2 text-sm disabled:opacity-40"
+              >
+                {busy ? 'Calculando…' : 'Confirmar costo de envío'}
+              </button>
+            </fieldset>
+            <fieldset disabled={busy} className="space-y-3">
+              <legend className="mb-4 font-darsha-serif text-2xl">Forma de pago</legend>
+              <label className="flex gap-2 text-sm" htmlFor="checkout-payment-mercadopago">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="mercadopago"
+                  id="checkout-payment-mercadopago"
+                  checked={method === 'mercadopago'}
+                  onChange={() => setPayment('mercadopago')}
+                />
+                Mercado Pago
+              </label>
+              {destination.method === 'pickup' && (
+                <>
+                  <label className="flex gap-2 text-sm" htmlFor="checkout-payment-bank-transfer">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="bank-transfer"
+                      id="checkout-payment-bank-transfer"
+                      checked={method === 'bank-transfer'}
+                      onChange={() => setPayment('bank-transfer')}
+                    />
+                    Transferencia bancaria antes del retiro
+                  </label>
+                  <label className="flex gap-2 text-sm" htmlFor="checkout-payment-cash">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="cash"
+                      id="checkout-payment-cash"
+                      checked={method === 'cash'}
+                      onChange={() => setPayment('cash')}
+                    />
+                    Efectivo al retirar
+                  </label>
+                </>
+              )}
+              <p className="text-sm text-[#4b5563]">
+                {method === 'mercadopago'
+                  ? 'Te llevaremos a Mercado Pago para completar el pago de forma segura.'
+                  : 'Tu pedido quedará pendiente de pago hasta que Darsha confirme la recepción.'}
+              </p>
+            </fieldset>
           </div>
-        </div>
+          <aside className="h-fit space-y-5 rounded-sm bg-[#E8E3DD] p-6 lg:sticky lg:top-32">
+            <h2 className="font-darsha-serif text-2xl">Tu pedido</h2>
+            <ul className="space-y-4">
+              {(cart.items || []).map((item, index) => (
+                <li key={item.id || index} className="text-sm">
+                  <p>
+                    {lines[index].product?.title || 'Producto no disponible'} × {item.quantity}
+                  </p>
+                  <p className="mt-1 text-right">
+                    {lines[index].total !== null
+                      ? formatUYU(lines[index].total!)
+                      : 'Precio por confirmar'}
+                  </p>
+                  {lines[index].warning && <p className="text-red-900">{lines[index].warning}</p>}
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatUYU(subtotal)}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Envío</span>
+              <span>
+                {shipping?.available
+                  ? shipping.amount
+                    ? formatUYU(shipping.amount)
+                    : 'Gratis'
+                  : 'Por confirmar'}
+              </span>
+            </div>
+            {shipping && !shipping.available && (
+              <p className="text-sm text-red-900">{shipping.message}</p>
+            )}
+            {shipping?.available && (
+              <div className="flex justify-between border-t border-[#D1C7C0] pt-4 text-lg">
+                <span>Total UYU</span>
+                <strong>{formatUYU(subtotal + shipping.amount)}</strong>
+              </div>
+            )}
+            {error && (
+              <p role="alert" className="text-sm text-red-900">
+                {error}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={
+                busy ||
+                isLoading ||
+                incomplete ||
+                !shipping?.available ||
+                lines.some((line) => !!line.warning)
+              }
+              className="w-full rounded-sm bg-[#3D393A] px-5 py-3 text-[#fafaf9] disabled:opacity-40"
+            >
+              {busy
+                ? 'Procesando…'
+                : method === 'mercadopago'
+                  ? 'Continuar a Mercado Pago'
+                  : 'Confirmar pedido'}
+            </button>
+            <p className="text-xs text-[#4b5563]">
+              El precio, el stock y el envío se verifican antes de confirmar.
+            </p>
+          </aside>
+        </form>
       )}
-    </div>
+    </section>
   )
 }

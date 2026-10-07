@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createElement } from 'react'
+import {
+  cleanup,
+  fireEvent,
+  render as testingRender,
+  screen,
+  waitFor,
+} from '@testing-library/react'
+import { createElement, type ReactElement } from 'react'
+import { ShippingProvider } from '@/providers/Shipping'
+const render = (ui: ReactElement) => testingRender(ui, { wrapper: ShippingProvider })
 import type { Cart, Product } from '@/payload-types'
 import { CartContents } from '@/components/Cart/CartContents'
 import { summarizeCart } from '@/utilities/cartSummary'

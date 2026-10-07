@@ -77,6 +77,7 @@ export interface Config {
     categories: Category;
     brands: Brand;
     media: Media;
+    'checkout-attempts': CheckoutAttempt;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -111,6 +112,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'checkout-attempts': CheckoutAttemptsSelect<false> | CheckoutAttemptsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -133,10 +135,12 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    shipping: Shipping;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    shipping: ShippingSelect<false> | ShippingSelect<true>;
   };
   locale: null;
   widgets: {
@@ -257,6 +261,28 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: ('UYU' | 'USD') | null;
+  checkoutReference?: string | null;
+  paymentState?: ('pending' | 'paid' | 'review' | 'cancelled') | null;
+  paymentProvider?: string | null;
+  deliveryDetails?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  shippingAmount?: number | null;
+  purchaseSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   accessToken?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -270,6 +296,10 @@ export interface Product {
   title: string;
   brand?: (number | null) | Brand;
   size?: string | null;
+  /**
+   * Peso real del producto con su envase, sin la caja de envío. Para variantes usa el mayor peso. No equivale al contenido en ml. Sin peso no se cotiza envío nacional.
+   */
+  shippingWeightGrams?: number | null;
   benefits?: string | null;
   usageInstructions?: string | null;
   ingredients?: string | null;
@@ -1069,11 +1099,6 @@ export interface Transaction {
         id?: string | null;
       }[]
     | null;
-  paymentMethod?: 'stripe' | null;
-  stripe?: {
-    customerID?: string | null;
-    paymentIntentID?: string | null;
-  };
   billingAddress?: {
     title?: string | null;
     firstName?: string | null;
@@ -1094,6 +1119,13 @@ export interface Transaction {
   cart?: (number | null) | Cart;
   amount?: number | null;
   currency?: ('UYU' | 'USD') | null;
+  paymentMethod?: 'stripe' | null;
+  stripe?: {
+    customerID?: string | null;
+    paymentIntentID?: string | null;
+  };
+  paymentProvider?: string | null;
+  paymentReference?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1183,6 +1215,46 @@ export interface Address {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "checkout-attempts".
+ */
+export interface CheckoutAttempt {
+  id: number;
+  reference: string;
+  cart: number | Cart;
+  customer?: (number | null) | User;
+  transaction?: (number | null) | Transaction;
+  order?: (number | null) | Order;
+  method: 'mercadopago' | 'bank-transfer' | 'cash';
+  state: 'initializing' | 'pending' | 'paid' | 'expired' | 'cancelled' | 'review';
+  reservation: 'held' | 'consumed' | 'released';
+  /**
+   * Total en centésimos UYU.
+   */
+  amount: number;
+  snapshot:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  fingerprint: string;
+  accessHash: string;
+  preferenceID?: string | null;
+  checkoutURL?: string | null;
+  paymentID?: string | null;
+  expiresAt: string;
+  /**
+   * Marca solo después de verificar el pago. No prepara ni entrega el pedido automáticamente.
+   */
+  manualPaymentReceived?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
 export interface FormSubmission {
@@ -1241,6 +1313,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'checkout-attempts';
+        value: number | CheckoutAttempt;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1707,6 +1783,31 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "checkout-attempts_select".
+ */
+export interface CheckoutAttemptsSelect<T extends boolean = true> {
+  reference?: T;
+  cart?: T;
+  customer?: T;
+  transaction?: T;
+  order?: T;
+  method?: T;
+  state?: T;
+  reservation?: T;
+  amount?: T;
+  snapshot?: T;
+  fingerprint?: T;
+  accessHash?: T;
+  preferenceID?: T;
+  checkoutURL?: T;
+  paymentID?: T;
+  expiresAt?: T;
+  manualPaymentReceived?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
@@ -1925,6 +2026,7 @@ export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   brand?: T;
   size?: T;
+  shippingWeightGrams?: T;
   benefits?: T;
   usageInstructions?: T;
   ingredients?: T;
@@ -2028,6 +2130,12 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  checkoutReference?: T;
+  paymentState?: T;
+  paymentProvider?: T;
+  deliveryDetails?: T;
+  shippingAmount?: T;
+  purchaseSnapshot?: T;
   accessToken?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2044,13 +2152,6 @@ export interface TransactionsSelect<T extends boolean = true> {
         variant?: T;
         quantity?: T;
         id?: T;
-      };
-  paymentMethod?: T;
-  stripe?:
-    | T
-    | {
-        customerID?: T;
-        paymentIntentID?: T;
       };
   billingAddress?:
     | T
@@ -2074,6 +2175,15 @@ export interface TransactionsSelect<T extends boolean = true> {
   cart?: T;
   amount?: T;
   currency?: T;
+  paymentMethod?: T;
+  stripe?:
+    | T
+    | {
+        customerID?: T;
+        paymentIntentID?: T;
+      };
+  paymentProvider?: T;
+  paymentReference?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2167,6 +2277,36 @@ export interface Footer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping".
+ */
+export interface Shipping {
+  id: number;
+  pickupAddress?: string | null;
+  pickupHours?: string | null;
+  unpaidPickupHours?: number | null;
+  /**
+   * Cuenta, banco, titular e instrucciones para identificar el pago. Se muestran solo en pedidos por transferencia.
+   */
+  bankTransferInstructions?: string | null;
+  /**
+   * Configura el peso de la caja y protección. Sin este dato no se cotiza entrega nacional. Una caja por pedido; para varias cajas se requiere coordinación manual.
+   */
+  packagingWeightGrams?: number | null;
+  sourceURL?: string | null;
+  reviewedAt?: string | null;
+  rates?:
+    | {
+        maxWeightGrams: number;
+        montevideoPrice: number;
+        interiorPrice: number;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -2205,6 +2345,30 @@ export interface FooterSelect<T extends boolean = true> {
               url?: T;
               label?: T;
             };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping_select".
+ */
+export interface ShippingSelect<T extends boolean = true> {
+  pickupAddress?: T;
+  pickupHours?: T;
+  unpaidPickupHours?: T;
+  bankTransferInstructions?: T;
+  packagingWeightGrams?: T;
+  sourceURL?: T;
+  reviewedAt?: T;
+  rates?:
+    | T
+    | {
+        maxWeightGrams?: T;
+        montevideoPrice?: T;
+        interiorPrice?: T;
         id?: T;
       };
   updatedAt?: T;

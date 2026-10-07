@@ -1,3 +1,4 @@
+import { releaseAttempt } from '@/lib/checkout/settlement'
 import { currenciesConfig } from '@/lib/currencies'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -5,8 +6,6 @@ import { Plugin } from 'payload'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
-
-import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -94,8 +93,46 @@ export const plugins: Plugin[] = [
     orders: {
       ordersCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        hooks: {
+          ...defaultCollection.hooks,
+          afterChange: [
+            ...(defaultCollection.hooks?.afterChange || []),
+            async ({ doc, previousDoc, req }) => {
+              if (
+                !req.context.checkoutInternal &&
+                doc.status === 'cancelled' &&
+                previousDoc?.status !== 'cancelled' &&
+                doc.paymentState === 'pending' &&
+                doc.checkoutReference
+              ) {
+                const found = await req.payload.find({
+                  collection: 'checkout-attempts',
+                  limit: 1,
+                  depth: 0,
+                  req,
+                  where: { reference: { equals: doc.checkoutReference } },
+                })
+                const attempt = found.docs[0]
+                if (attempt && attempt.method !== 'mercadopago')
+                  await releaseAttempt(req, attempt.id, 'cancelled')
+              }
+              return doc
+            },
+          ],
+        },
         fields: [
           ...defaultCollection.fields,
+          { name: 'checkoutReference', type: 'text', unique: true, admin: { readOnly: true } },
+          {
+            name: 'paymentState',
+            type: 'select',
+            options: ['pending', 'paid', 'review', 'cancelled'],
+            admin: { readOnly: true },
+          },
+          { name: 'paymentProvider', type: 'text', admin: { readOnly: true } },
+          { name: 'deliveryDetails', type: 'json', admin: { readOnly: true } },
+          { name: 'shippingAmount', type: 'number', admin: { readOnly: true } },
+          { name: 'purchaseSnapshot', type: 'json', admin: { readOnly: true } },
           {
             name: 'accessToken',
             type: 'text',
@@ -119,14 +156,32 @@ export const plugins: Plugin[] = [
         ],
       }),
     },
-    payments: {
-      paymentMethods: [
-        stripeAdapter({
-          secretKey: process.env.STRIPE_SECRET_KEY!,
-          publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-          webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
-        }),
-      ],
+    payments: { paymentMethods: [] },
+    transactions: {
+      transactionsCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        fields: [
+          ...defaultCollection.fields,
+          // Keep historical columns readable without registering a Stripe adapter.
+          {
+            name: 'paymentMethod',
+            type: 'select',
+            options: ['stripe'],
+            admin: { hidden: true, readOnly: true },
+          },
+          {
+            name: 'stripe',
+            type: 'group',
+            admin: { hidden: true, readOnly: true },
+            fields: [
+              { name: 'customerID', type: 'text' },
+              { name: 'paymentIntentID', type: 'text' },
+            ],
+          },
+          { name: 'paymentProvider', type: 'text', admin: { readOnly: true } },
+          { name: 'paymentReference', type: 'text', unique: true, admin: { readOnly: true } },
+        ],
+      }),
     },
     products: {
       productsCollectionOverride: ProductsCollection,

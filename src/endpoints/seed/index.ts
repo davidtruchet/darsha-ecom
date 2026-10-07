@@ -41,7 +41,7 @@ const colorVariantOptions = [
   { label: 'White', value: 'white' },
 ]
 
-const globals: GlobalSlug[] = ['header', 'footer']
+const globals = ['header', 'footer'] as const satisfies readonly GlobalSlug[]
 
 const baseAddressUSData: Transaction['billingAddress'] = {
   title: 'Dr.',
@@ -358,11 +358,6 @@ export const seed = async ({
     data: {
       currency: 'USD',
       customer: customer.id,
-      paymentMethod: 'stripe',
-      stripe: {
-        customerID: 'cus_123',
-        paymentIntentID: 'pi_123',
-      },
       status: 'pending',
       billingAddress: baseAddressUSData,
     },
@@ -373,11 +368,6 @@ export const seed = async ({
     data: {
       currency: 'USD',
       customer: customer.id,
-      paymentMethod: 'stripe',
-      stripe: {
-        customerID: 'cus_123',
-        paymentIntentID: 'pi_123',
-      },
       status: 'succeeded',
       billingAddress: baseAddressUSData,
     },

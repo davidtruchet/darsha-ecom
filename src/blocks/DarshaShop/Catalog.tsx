@@ -105,7 +105,7 @@ export async function DarshaProductCatalogBlock({
             <select
               name="category"
               defaultValue={categoryDoc ? category : ''}
-              className="rounded border border-[#D1C7C0] bg-white p-3"
+              className="darsha-select rounded border border-[#D1C7C0] bg-white p-3"
             >
               <option value="">Todas las categorías</option>
               {categories.docs.map((item) => (
@@ -120,7 +120,7 @@ export async function DarshaProductCatalogBlock({
             <select
               name="brand"
               defaultValue={brandDoc ? brand : ''}
-              className="rounded border border-[#D1C7C0] bg-white p-3"
+              className="darsha-select rounded border border-[#D1C7C0] bg-white p-3"
             >
               <option value="">Todas las marcas</option>
               {brands.docs.map((item) => (
@@ -135,7 +135,7 @@ export async function DarshaProductCatalogBlock({
             <select
               name="sort"
               defaultValue={sort}
-              className="rounded border border-[#D1C7C0] bg-white p-3"
+              className="darsha-select rounded border border-[#D1C7C0] bg-white p-3"
             >
               <option value="name">Nombre</option>
               <option value="newest">Más recientes</option>

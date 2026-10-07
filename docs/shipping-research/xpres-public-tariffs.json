@@ -1,0 +1,157 @@
+{
+  "provider": "UES Xpres",
+  "sourceURL": "https://xpres.com.uy/section-servicios",
+  "observedAt": "2026-10-06",
+  "effectiveFrom": null,
+  "currency": "UYU",
+  "status": "reference-only-not-active-checkout-rates",
+  "taxLabel": "Tarifas impuestos incluidos",
+  "additionalTaxNote": "Aplica impuestos 22% IVA + 10% TP",
+  "originApplicability": "Not stated by price table; confirm for Maldonado origin",
+  "weightLimitsKg": [
+    2,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "rates": [
+    {
+      "service": "home-delivery",
+      "publishedZone": "Montevideo",
+      "pricesInCentésimos": [
+        28500,
+        33100,
+        41200,
+        54800,
+        63300,
+        130600,
+        170000
+      ]
+    },
+    {
+      "service": "home-delivery",
+      "publishedZone": "Interior",
+      "pricesInCentésimos": [
+        31100,
+        34600,
+        47300,
+        80300,
+        80300,
+        173500,
+        225500
+      ]
+    },
+    {
+      "service": "xpres-point",
+      "publishedZone": "Montevideo",
+      "pricesInCentésimos": [
+        18200,
+        21400,
+        23300,
+        28000,
+        37100,
+        90900,
+        154900
+      ]
+    },
+    {
+      "service": "xpres-point",
+      "publishedZone": "Interior",
+      "pricesInCentésimos": [
+        25700,
+        28800,
+        34900,
+        43900,
+        53000,
+        118300,
+        201500
+      ]
+    }
+  ],
+  "rawTables": [
+    [
+      [
+        "",
+        "Paquete hasta\n 2 kg",
+        "Paquete hasta\n 5KG",
+        "Paquete hasta\n 10KG",
+        "Paquete hasta\n 20KG",
+        "Paquete hasta\n 30KG",
+        "Paquete hasta\n 40KG",
+        "Paquete hasta\n 50KG"
+      ],
+      [
+        "Montevideo",
+        "$U 285",
+        "$U 331",
+        "$U 412",
+        "$U 548",
+        "$U 633",
+        "$U 1306",
+        "$U 1700"
+      ],
+      [
+        "Interior",
+        "$U 311",
+        "$U 346",
+        "$U 473",
+        "$U 803",
+        "$U 803",
+        "$U 1735",
+        "$U 2255"
+      ]
+    ],
+    [
+      [
+        "",
+        "Paquete hasta\n 2 kg",
+        "Paquete hasta\n 5KG",
+        "Paquete hasta\n 10KG",
+        "Paquete hasta\n 20KG",
+        "Paquete hasta\n 30KG",
+        "Paquete hasta\n 40KG",
+        "Paquete hasta\n 50KG"
+      ],
+      [
+        "Montevideo",
+        "$U 182",
+        "$U 214",
+        "$U 233",
+        "$U 280",
+        "$U 371",
+        "$U 909",
+        "$U 1549"
+      ],
+      [
+        "Interior",
+        "$U 257",
+        "$U 288",
+        "$U 349",
+        "$U 439",
+        "$U 530",
+        "$U 1183",
+        "$U 2015"
+      ]
+    ],
+    [
+      [
+        "",
+        "Montevideo",
+        "Interior"
+      ],
+      [
+        "Montevideo",
+        "24 hs",
+        "24/72 hs"
+      ],
+      [
+        "Interior",
+        "72 hs",
+        "96 hs"
+      ]
+    ]
+  ]
+}

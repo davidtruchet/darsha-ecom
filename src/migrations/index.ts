@@ -6,6 +6,9 @@ import * as migration_20261005_005400_darsha_services_white from './20261005_005
 import * as migration_20261005_011812_darsha_uyu from './20261005_011812_darsha_uyu'
 import * as migration_20261005_011813_darsha_shop from './20261005_011813_darsha_shop'
 import * as migration_20261005_013529_darsha_product_details from './20261005_013529_darsha_product_details'
+import * as migration_20261006_165339_darsha_shipping from './20261006_165339_darsha_shipping'
+import * as migration_20261006_222330_darsha_checkout from './20261006_222330_darsha_checkout'
+import * as migration_20261006_223720_darsha_pickup_details from './20261006_223720_darsha_pickup_details'
 
 export const migrations = [
   {
@@ -47,5 +50,20 @@ export const migrations = [
     up: migration_20261005_013529_darsha_product_details.up,
     down: migration_20261005_013529_darsha_product_details.down,
     name: '20261005_013529_darsha_product_details',
+  },
+  {
+    up: migration_20261006_165339_darsha_shipping.up,
+    down: migration_20261006_165339_darsha_shipping.down,
+    name: '20261006_165339_darsha_shipping',
+  },
+  {
+    up: migration_20261006_222330_darsha_checkout.up,
+    down: migration_20261006_222330_darsha_checkout.down,
+    name: '20261006_222330_darsha_checkout',
+  },
+  {
+    up: migration_20261006_223720_darsha_pickup_details.up,
+    down: migration_20261006_223720_darsha_pickup_details.down,
+    name: '20261006_223720_darsha_pickup_details',
   },
 ]

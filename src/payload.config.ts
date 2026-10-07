@@ -16,6 +16,7 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { CheckoutAttempts } from '@/collections/CheckoutAttempts'
 import { Brands } from '@/collections/Brands'
 import { Categories } from '@/collections/Categories'
 import { Media } from '@/collections/Media'
@@ -23,7 +24,16 @@ import { Pages } from '@/collections/Pages'
 import { Users } from '@/collections/Users'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
+import { Shipping } from '@/globals/Shipping'
 import { plugins } from './plugins'
+import {
+  checkoutInitiate,
+  checkoutStatus,
+  checkoutWebhook,
+  checkoutExpire,
+  checkoutExpireGet,
+} from './endpoints/checkout'
+import { shippingQuoteEndpoint } from './endpoints/shippingQuote'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -41,7 +51,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Brands, Media],
+  collections: [Users, Pages, Categories, Brands, Media, CheckoutAttempts],
   db: vercelPostgresAdapter({
     push: false,
     pool: {
@@ -84,8 +94,15 @@ export default buildConfig({
     },
   }),
   //email: nodemailerAdapter(),
-  endpoints: [],
-  globals: [Header, Footer],
+  endpoints: [
+    shippingQuoteEndpoint,
+    checkoutInitiate,
+    checkoutStatus,
+    checkoutWebhook,
+    checkoutExpire,
+    checkoutExpireGet,
+  ],
+  globals: [Header, Footer, Shipping],
   plugins: [
     ...plugins,
     vercelBlobStorage({

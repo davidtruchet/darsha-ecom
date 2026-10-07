@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatUYU } from '@/lib/currencies'
 import { summarizeCart } from '@/utilities/cartSummary'
 import type { CartItem } from './index'
+import { ShippingEstimator } from './ShippingEstimator'
 
 const linkClass =
   'block rounded-sm bg-[#3D393A] px-5 py-3 text-center text-[#fafaf9] hover:opacity-80'
@@ -237,6 +238,7 @@ export function CartContents({
             </p>
           </>
         )}
+        {!!items.length && <ShippingEstimator />}
         {drawer && !!items.length && (
           <Link
             href="/cart"
@@ -246,6 +248,7 @@ export function CartContents({
             Ver carrito
           </Link>
         )}
+        {!!items.length && <Link href="/checkout" onClick={onNavigate} className={linkClass}>Finalizar compra</Link>}
         <Link href="/shop" onClick={onNavigate} className={linkClass}>
           Continuar comprando
         </Link>

@@ -67,6 +67,20 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       admin: { position: 'sidebar' },
     },
     { name: 'size', type: 'text', label: 'Presentación' },
+    {
+      name: 'shippingWeightGrams',
+      type: 'number',
+      label: 'Peso para envío (gramos)',
+      min: 1,
+      admin: {
+        description:
+          'Peso real del producto con su envase, sin la caja de envío. Para variantes usa el mayor peso. No equivale al contenido en ml. Sin peso no se cotiza envío nacional.',
+      },
+      validate: (value: number | null | undefined) =>
+        value == null ||
+        (Number.isSafeInteger(value) && value > 0) ||
+        'Usa un entero mayor que cero.',
+    },
     { name: 'benefits', type: 'textarea', label: 'Beneficios' },
     { name: 'usageInstructions', type: 'textarea', label: 'Modo de uso' },
     { name: 'ingredients', type: 'textarea', label: 'Ingredientes' },
