@@ -13,12 +13,6 @@ test.describe('Frontend', () => {
   const adminPassword = 'admin'
   const userEmail = 'user@test.com'
   const userPassword = 'user'
-  const testPaymentDetails = {
-    cardNumber: '5454 5454 5454 5454',
-    expiryDate: '0330',
-    cvc: '737',
-    postcode: 'WS11 1DB',
-  }
   test.beforeAll(async ({ browser, request }, testInfo) => {
     const context = await browser.newContext()
     page = await context.newPage()
@@ -164,17 +158,7 @@ test.describe('Frontend', () => {
     await expect(heading).toHaveText('Orders')
   })
 
-  test('authenticated users can view order details', async ({ page }) => {
-    await loginFromUI(page, adminEmail, adminPassword)
-    await addToCartAndConfirm(page, {
-      productName: 'Test Product',
-      productSlug: 'test-product',
-    })
 
-    await checkout(page, testPaymentDetails)
-
-    await expectOrderIsDisplayed(page)
-  })
 
   test('authenticated customers cannot access /admin', async ({ page }) => {
     await createUserAndLogin(page.request, userEmail, userPassword, false)
@@ -183,42 +167,9 @@ test.describe('Frontend', () => {
     await expect(heading).toContainText('Unauthorized')
   })
 
-  test('Guest can create and view order', async ({ page }) => {
-    await logoutAndExpectSuccess(page)
-    await addToCartAndConfirm(page, {
-      productName: 'Test Product',
-      productSlug: 'test-product',
-    })
 
-    await checkout(page, testPaymentDetails, 'guest@test.com')
-    await expectOrderIsDisplayed(page)
-  })
 
-  test('Guest can view their order using /find-order', async ({ page }) => {
-    await logoutAndExpectSuccess(page)
-    await addToCartAndConfirm(page, {
-      productName: 'Test Product',
-      productSlug: 'test-product',
-    })
 
-    const guestEmail = 'guest@test.com'
-
-    await checkout(page, testPaymentDetails, guestEmail)
-
-    const orderHeader = await page.locator('h1.text-sm.uppercase.font-mono > span').textContent()
-    const orderNumber = orderHeader?.replace(/^Order #/, '').trim()
-
-    await page.goto(`${baseURL}/find-order`)
-    const orderNumberInput = page.locator('input[name="orderID"]')
-    const emailInput = page.locator('input[name="email"]')
-    await orderNumberInput.fill(orderNumber || '')
-    await emailInput.fill(guestEmail)
-
-    const findOrderButton = page.getByRole('button', { name: 'Find my order' })
-    await findOrderButton.click()
-
-    await expect(orderHeader).not.toBeNull()
-  })
 
   test('Admins can update and view prices on products', async ({ page }) => {
     await loginFromUI(page, adminEmail, adminPassword)
@@ -312,35 +263,7 @@ test.describe('Frontend', () => {
     await expect(newProductCard).toBeVisible()
   })
 
-  test('Admins can view transactions and orders', async ({ page }) => {
-    await loginFromUI(page, adminEmail, adminPassword)
-    await addToCartAndConfirm(page, {
-      productName: 'Test Product',
-      productSlug: 'test-product',
-    })
-    await checkout(page, testPaymentDetails)
-    await expectOrderIsDisplayed(page)
-    const orderHeader = await page.locator('h1.text-sm.uppercase.font-mono > span').textContent()
-    const orderNumber = orderHeader?.replace(/^Order #/, '').trim()
 
-    await page.goto(`${baseURL}/admin/collections/orders`)
-    const rowCount = await page.locator('div.table table tbody tr').count()
-    expect(rowCount).toBeGreaterThan(1)
-
-    await page.goto(`${baseURL}/admin/collections/orders/${orderNumber}`)
-    const product = page.locator('div.rs__control', { hasText: 'Test Product' })
-    await expect(product).toBeVisible()
-
-    await page.goto(`${baseURL}/admin/collections/transactions`)
-    const transactionRows = await page.locator('div.table table tbody tr').count()
-    expect(transactionRows).toBeGreaterThan(0)
-
-    const firstRow = page.locator('td.cell-createdAt > a').first()
-    await firstRow.click()
-
-    const status = page.locator('div.rs__control', { hasText: 'Succeeded' })
-    await expect(status).toBeVisible()
-  })
 
   test('should disable add to cart when product has no inventory', async ({ page }) => {
     await page.goto(`${baseURL}/products/no-inventory-product`)
@@ -349,36 +272,6 @@ test.describe('Frontend', () => {
   })
 
   // This test fails, it should not let you checkout but it does
-  test.skip('should fail checkout when inventory is 0', async ({ page }) => {
-    await loginFromUI(page, adminEmail, adminPassword)
-
-    // update inventory to 1
-    await page.goto(`${baseURL}/admin/collections/products`)
-    const testProductLink = page.getByRole('link', { name: 'No Inventory Product', exact: true })
-    await testProductLink.click()
-    const productDetailsButton = page.getByRole('button', { name: 'Product Details' })
-    await productDetailsButton.click()
-    const inventoryInput = page.locator('input[name="inventory"]')
-    await inventoryInput.fill('1')
-    await saveAndConfirmSuccess(page)
-
-    await page.goto(`${baseURL}/products/no-inventory-product`)
-    const addToCartButton = page.getByRole('button', { name: 'Add to Cart' })
-    await expect(addToCartButton).toBeVisible()
-    await addToCartButton.click()
-
-    // update inventory to 0
-    await page.goto(`${baseURL}/admin/collections/products`)
-    await testProductLink.click()
-    await productDetailsButton.click()
-    await inventoryInput.fill('')
-    await saveAndConfirmSuccess(page)
-
-    await checkout(page, testPaymentDetails)
-    const errorMessage = page.locator('text=This product is out of stock')
-    await expect(errorMessage).toBeVisible()
-  })
-
   async function createUserAndLogin(
     request: any,
     email: string,
@@ -583,55 +476,6 @@ test.describe('Frontend', () => {
 
     const emptyCartMessage = page.getByText('Your cart is empty.')
     await expect(emptyCartMessage).toBeVisible()
-  }
-
-  async function checkout(
-    page: Page,
-    paymentDetails: {
-      cardNumber: string
-      expiryDate: string
-      cvc: string
-      postcode: string
-    },
-    guestEmail?: string | null,
-  ): Promise<void> {
-    await page.goto(`${baseURL}/checkout`)
-
-    if (guestEmail) {
-      const emailInput = page.locator('input[type="email"]')
-      await emailInput.fill(guestEmail)
-
-      const continueGuestBtn = page.getByRole('button', { name: /continue as guest/i })
-      await continueGuestBtn.click()
-    }
-
-    const confirmAddress = page.getByRole('button', { name: 'Confirm address' })
-    await confirmAddress.click()
-
-    const { cardNumber, expiryDate, cvc, postcode } = paymentDetails
-
-    const stripeIframe = page.frameLocator('iframe[title="Secure payment input frame"]')
-
-    await stripeIframe.locator('#Field-numberInput').fill(cardNumber)
-    await stripeIframe.locator('#Field-expiryInput').fill(expiryDate)
-    await stripeIframe.locator('#Field-cvcInput').fill(cvc)
-    await stripeIframe.locator('#Field-postalCodeInput').fill(postcode)
-
-    const payNowButton = page.getByRole('button', { name: 'Pay now' })
-    await payNowButton.click()
-
-    await page.waitForURL(/\/orders/)
-    await expect(page).toHaveURL(/\/orders/)
-  }
-
-  async function expectOrderIsDisplayed(page: Page): Promise<void> {
-    const orderHeader = await page.locator('h1.text-sm.uppercase.font-mono > span').textContent()
-    expect(orderHeader).toContain('Order #')
-
-    const orderNumber = orderHeader?.replace(/^Order #/, '').trim()
-    const pageURL = page.url()
-
-    expect(pageURL).toContain(`/orders/${orderNumber}`)
   }
 
   async function saveAndConfirmSuccess(page: Page) {

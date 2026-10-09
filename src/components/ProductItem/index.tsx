@@ -55,7 +55,10 @@ export const ProductItem: React.FC<Props> = ({
     }
   }
 
-  const itemPrice = variant?.priceInUSD || product.priceInUSD
+  const itemPrice =
+    currencyCode === 'USD'
+      ? (variant?.priceInUSD ?? product.priceInUSD)
+      : (variant?.priceInUYU ?? product.priceInUYU)
   const itemURL = `/products/${product.slug}${variant ? `?variant=${variant.id}` : ''}`
 
   return (

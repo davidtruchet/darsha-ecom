@@ -1,0 +1,248 @@
+{
+  "status": "research sample; not imported",
+  "capturedAt": "2026-10-05T01:11:33.720083+00:00",
+  "products": [
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "The Cream Fine Texture",
+      "description": "Crema avanzada para piel normal/mixta que combina el extracto de Alpinia y el nanopolímero HLG para preservar la juventud, restaurar la luminosidad y revitalizar desde el interior.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/the-cream-fine-texture/12/12",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/qejlpoghup9m9byibem4.jpg"
+      ],
+      "sourcePrice": "10120",
+      "currency": "UYU",
+      "sourceSKU": "340001",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "Ice & Firm",
+      "description": "Tratamiento reafirmante con efecto lifting y accesorio de masaje que potencia los resultados.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/ice-amp-firm/10/10",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/4n7vfj4h7djidmw80bre.jpg"
+      ],
+      "sourcePrice": "4130",
+      "currency": "UYU",
+      "sourceSKU": "320010",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "Retinight",
+      "description": "Sérum nocturno con Retinal al 0,04% que combate los signos del envejecimiento, mejorando la firmeza, textura y luminosidad de la piel mientras duermes.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/retinight/42/42",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/jfsjt9orjpv08ctjztgz.jpg"
+      ],
+      "sourcePrice": "4130",
+      "currency": "UYU",
+      "sourceSKU": "370011",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "Tratamiento Labial con Ácido Hialurónico",
+      "description": "Bálsamo labial de textura oleosa que mejora el volumen de los labios mientras estimula la producción de colágeno.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/tratamiento-labial-con-acido-hialuronico/23/23",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/9rrwbyfwh53p43lw7adt.jpg"
+      ],
+      "sourcePrice": "965",
+      "currency": "UYU",
+      "sourceSKU": "350032",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "Stick Protector Invisible SPF50+",
+      "description": "Protección en formato barra para una aplicación cómoda y rápida. De textura transparente y sin sensación grasa.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/stick-protector-invisible-spf50-/29/29",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/jssb3pc58c86jyphusbj.jpg"
+      ],
+      "sourcePrice": "2275",
+      "currency": "UYU",
+      "sourceSKU": "360013",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Germaine de Capuccini",
+      "title": "Sérum Firmeza y Vitalidad",
+      "description": "Sérum avanzado que redefine pómulos y contornos faciales. Su textura, con ingredientes redensificadores y reafirmantes, eleva y tensa la piel. Desde la primera aplicación, mejora signos de edad, dejando la piel radiante y uniforme.",
+      "sourceURL": "https://germaine-de-capuccini.uy/p/serum-firmeza-y-vitalidad/1/1",
+      "imageURLs": [
+        "https://cfluna.com/germaine-de-capuccini.uy/cdn/files/tmp/compressed/normal/x8xbss906sjrchu2r7ii.jpg"
+      ],
+      "sourcePrice": "6930",
+      "currency": "UYU",
+      "sourceSKU": "320000",
+      "sourceAvailability": "https://schema.org/InStock",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Niacinamide+ Micellar Water",
+      "description": "Agua micelar con niacinamida y prebióticos para limpiar y desmaquillar rostro y ojos.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/niacinamide-micellar-water.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/niacinamide_micellar_water_foto_producto1.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "190 ml",
+      "proposedCategory": "Limpiadores",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Niacinamide+ Serum",
+      "description": "Sérum hidratante con niacinamida al 10% y ácido hialurónico de bajo peso molecular.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/niacinamide-serum.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/niacinamide_serum_foto_producto1.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "30 g",
+      "proposedCategory": "Sérums",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Niacinamide+ Cream",
+      "description": "Crema con niacinamida, prebióticos, posbióticos, pantenol y vitamina E para hidratar y cuidar la barrera cutánea.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/niacinamide-cream.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/niacinamide_cream_foto_producto1.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "50 g",
+      "proposedCategory": "Cremas",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Vita B12+ Eye Contour",
+      "description": "Emulsión ligera sin fragancia para el contorno de ojos, con vitamina B12 y melatonina.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/vita-b12-eye-contour.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/vita_b12_contorno_producto3.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "15 g",
+      "proposedCategory": "Contorno de ojos",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Vita B12+ Cream",
+      "description": "Crema sin fragancia con vitamina B12 y un biopolisacárido para el cuidado de la barrera cutánea.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/vita-b12-cream.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/vita_b12_cream_producto7.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "50 g",
+      "proposedCategory": "Cremas",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    },
+    {
+      "brand": "Lidherma",
+      "title": "Vita B12+ Emulsion",
+      "description": "Emulsión fluida sin fragancia con vitamina B12 y niacinamida.",
+      "descriptionTreatment": "Short editorial summary of source description",
+      "sourceURL": "https://www.lidherma.uy/productos/detalle/vita-b12-emulsion.html",
+      "imageURLs": [
+        "https://www.lidherma.uy/uploads/vita_b12_emulsion_producto3.png"
+      ],
+      "sourcePrice": null,
+      "currency": null,
+      "size": "30 g",
+      "proposedCategory": "Cremas",
+      "priceStatus": "No public Uruguay price found on source product page",
+      "status": "draft"
+    }
+  ],
+  "germaineCategories": [
+    {
+      "title": "Serums y aceites faciales",
+      "sourceURL": "/cuidado-facial/categoria/serums-y-aceites-faciales/1"
+    },
+    {
+      "title": "Crema de tratamiento",
+      "sourceURL": "/cuidado-facial/categoria/crema-de-tratamiento/1"
+    },
+    {
+      "title": "Mascarillas",
+      "sourceURL": "/cuidado-facial/categoria/mascarillas/1"
+    },
+    {
+      "title": "Bálsamo labial",
+      "sourceURL": "/cuidado-facial/categoria/balsamo-labial/1"
+    },
+    {
+      "title": "Protector Solar",
+      "sourceURL": "/cuidado-facial/categoria/protector-solar/1"
+    },
+    {
+      "title": "Exfoliantes",
+      "sourceURL": "/cuidado-facial/categoria/exfoliantes/1"
+    },
+    {
+      "title": "Contorno de Ojos",
+      "sourceURL": "/cuidado-facial/categoria/contorno-de-ojos/1"
+    },
+    {
+      "title": "Limpieza Facial",
+      "sourceURL": "/cuidado-facial/categoria/limpieza-facial/1"
+    },
+    {
+      "title": "Tratamientos específicos",
+      "sourceURL": "/cuidado-facial/categoria/tratamientos-especificos/1"
+    },
+    {
+      "title": "Crema hidratante",
+      "sourceURL": "/cuidado-corporal/categoria/crema-hidratante/1"
+    },
+    {
+      "title": "Exfoliante corporal",
+      "sourceURL": "/cuidado-corporal/categoria/exfoliante-corporal/1"
+    },
+    {
+      "title": "Protector solar",
+      "sourceURL": "/cuidado-corporal/categoria/protector-solar/1"
+    },
+    {
+      "title": "Crema de manos",
+      "sourceURL": "/cuidado-corporal/categoria/crema-de-manos/1"
+    },
+    {
+      "title": "Tratamientos específicos",
+      "sourceURL": "/cuidado-corporal/categoria/tratamientos-especificos/1"
+    },
+    {
+      "title": "Crema de tratamiento",
+      "sourceURL": "/cuidado-corporal/categoria/crema-de-tratamiento/1"
+    }
+  ]
+}

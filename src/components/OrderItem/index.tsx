@@ -25,6 +25,17 @@ export const OrderItem: React.FC<Props> = ({ order }) => {
           </p>
 
           {order.status && <OrderStatus status={order.status} />}
+          {order.paymentState && (
+            <span className="text-sm">
+              {order.paymentState === 'pending'
+                ? 'Pendiente de pago'
+                : order.paymentState === 'paid'
+                  ? 'Pago confirmado'
+                  : order.paymentState === 'review'
+                    ? 'Pago en revisión'
+                    : 'Pago cancelado'}
+            </span>
+          )}
         </div>
 
         <p className="flex gap-2 text-xs text-primary/80">

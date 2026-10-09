@@ -1,102 +1,46 @@
-import { Grid } from '@/components/Grid'
-import { ProductGridItem } from '@/components/ProductGridItem'
-import configPromise from '@payload-config'
+import { RenderBlocks } from '@/blocks/RenderBlocks'
+import type { CatalogSearchParams } from '@/blocks/DarshaShop/Catalog'
+import { generateMeta } from '@/utilities/generateMeta'
+import config from '@payload-config'
 import { getPayload } from 'payload'
-import React from 'react'
+import { draftMode } from 'next/headers'
+import { notFound } from 'next/navigation'
 
-export const metadata = {
-  description: 'Search for products in the store.',
-  title: 'Shop',
-}
+export const dynamic = 'force-dynamic'
 
-type SearchParams = { [key: string]: string | string[] | undefined }
-
-type Props = {
-  searchParams: Promise<SearchParams>
-}
-
-export default async function ShopPage({ searchParams }: Props) {
-  const { q: searchValue, sort, category } = await searchParams
-  const payload = await getPayload({ config: configPromise })
-
-  const products = await payload.find({
-    collection: 'products',
-    draft: false,
-    overrideAccess: false,
-    select: {
-      title: true,
-      slug: true,
-      gallery: true,
-      categories: true,
-      priceInUSD: true,
+async function shopPage() {
+  const payload = await getPayload({ config })
+  const { isEnabled: draft } = await draftMode()
+  const result = await payload.find({
+    collection: 'pages',
+    draft,
+    overrideAccess: draft,
+    limit: 1,
+    where: {
+      and: [
+        { slug: { equals: 'shop' } },
+        ...(!draft ? [{ _status: { equals: 'published' } }] : []),
+      ],
     },
-    ...(sort ? { sort } : { sort: 'title' }),
-    ...(searchValue || category
-      ? {
-          where: {
-            and: [
-              {
-                _status: {
-                  equals: 'published',
-                },
-              },
-              ...(searchValue
-                ? [
-                    {
-                      or: [
-                        {
-                          title: {
-                            like: searchValue,
-                          },
-                        },
-                        {
-                          description: {
-                            like: searchValue,
-                          },
-                        },
-                      ],
-                    },
-                  ]
-                : []),
-              ...(category
-                ? [
-                    {
-                      categories: {
-                        contains: category,
-                      },
-                    },
-                  ]
-                : []),
-            ],
-          },
-        }
-      : {}),
   })
+  return result.docs[0]
+}
 
-  const resultsText = products.docs.length > 1 ? 'results' : 'result'
+export async function generateMetadata() {
+  const page = await shopPage()
+  return page ? generateMeta({ doc: page }) : { title: 'Tienda | Espacio Darsha' }
+}
 
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<CatalogSearchParams>
+}) {
+  const page = await shopPage()
+  if (!page) notFound()
   return (
-    <div>
-      {searchValue ? (
-        <p className="mb-4">
-          {products.docs?.length === 0
-            ? 'There are no products that match '
-            : `Showing ${products.docs.length} ${resultsText} for `}
-          <span className="font-bold">&quot;{searchValue}&quot;</span>
-        </p>
-      ) : null}
-
-      {!searchValue && products.docs?.length === 0 && (
-        <p className="mb-4">No products found. Please try different filters.</p>
-      )}
-
-      {products?.docs.length > 0 ? (
-        <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.docs.map((product) => {
-            return <ProductGridItem key={product.id} product={product} />
-          })}
-        </Grid>
-      ) : null}
-    </div>
+    <article>
+      <RenderBlocks blocks={page.layout} catalogSearchParams={await searchParams} />
+    </article>
   )
 }

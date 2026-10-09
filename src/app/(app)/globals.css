@@ -229,16 +229,73 @@ html[data-theme='light'] {
   padding-inline: 1rem;
 }
 
-@media (width >= 40rem) { .darsha-container { max-width: 40rem; } }
-@media (width >= 48rem) { .darsha-container { max-width: 48rem; } }
-@media (width >= 64rem) { .darsha-container { max-width: 64rem; } }
-@media (width >= 80rem) { .darsha-container { max-width: 80rem; } }
-@media (width >= 96rem) { .darsha-container { max-width: 96rem; } }
+@media (width >= 40rem) {
+  .darsha-container {
+    max-width: 40rem;
+  }
+}
+@media (width >= 48rem) {
+  .darsha-container {
+    max-width: 48rem;
+  }
+}
+@media (width >= 64rem) {
+  .darsha-container {
+    max-width: 64rem;
+  }
+}
+@media (width >= 80rem) {
+  .darsha-container {
+    max-width: 80rem;
+  }
+}
+@media (width >= 96rem) {
+  .darsha-container {
+    max-width: 96rem;
+  }
+}
 
-.font-darsha-serif { font-family: var(--font-baskervville), Georgia, serif; }
+.font-darsha-serif {
+  font-family: var(--font-baskervville), Georgia, serif;
+}
 
 a,
 input,
 button {
   @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 dark:focus-visible:ring-neutral-600 dark:focus-visible:ring-offset-neutral-900;
+}
+
+/* A consistent inset chevron for native Darsha dropdowns. */
+.darsha-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233D393A' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .darsha-receipt,
+  .darsha-receipt * {
+    visibility: visible;
+  }
+  .darsha-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    background: white;
+    color: black;
+    padding: 1cm;
+    margin: 0;
+  }
+  .darsha-receipt li {
+    break-inside: avoid;
+  }
 }

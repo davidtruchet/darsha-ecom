@@ -1,111 +1,122 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import type { Product, Variant } from '@/payload-types'
-
+import type { Product } from '@/payload-types'
+import { getProductPurchaseState } from '@/utilities/productPurchase'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
-import clsx from 'clsx'
 import { useSearchParams } from 'next/navigation'
-import React, { useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-type Props = {
-  product: Product
-}
 
-export function AddToCart({ product }: Props) {
+export function AddToCart({ product }: { product: Product }) {
   const { addItem, cart, isLoading } = useCart()
-  const searchParams = useSearchParams()
-
-  const variants = product.variants?.docs || []
-
-  const selectedVariant = useMemo<Variant | undefined>(() => {
-    if (product.enableVariants && variants.length) {
-      const variantId = searchParams.get('variant')
-
-      const validVariant = variants.find((variant) => {
-        if (typeof variant === 'object') {
-          return String(variant.id) === variantId
-        }
-        return String(variant) === variantId
-      })
-
-      if (validVariant && typeof validVariant === 'object') {
-        return validVariant
-      }
-    }
-
-    return undefined
-  }, [product.enableVariants, searchParams, variants])
-
-  const addToCart = useCallback(
-    (e: React.FormEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-
-      addItem({
-        product: product.id,
-        variant: selectedVariant?.id ?? undefined,
-      }).then(() => {
-        toast.success('Item added to cart.')
-      })
-    },
-    [addItem, product, selectedVariant],
+  const params = useSearchParams()
+  const [quantity, setQuantity] = useState(1)
+  const [pending, setPending] = useState(false)
+  const [message, setMessage] = useState('')
+  const notifiedAttempt = useRef<object | null>(null)
+  const [attempt, setAttempt] = useState<{ expected: number; added: number } | null>(null)
+  const { selectedVariant, remaining, cartQuantity, reason } = getProductPurchaseState(
+    product,
+    params.get('variant'),
+    cart?.items || [],
   )
+  const max = Math.max(1, remaining)
+  const value = Math.min(quantity, max)
+  const busy = pending || isLoading
 
-  const disabled = useMemo<boolean>(() => {
-    const existingItem = cart?.items?.find((item) => {
-      const productID = typeof item.product === 'object' ? item.product?.id : item.product
-      const variantID = item.variant
-        ? typeof item.variant === 'object'
-          ? item.variant?.id
-          : item.variant
-        : undefined
-
-      if (productID === product.id) {
-        if (product.enableVariants) {
-          return variantID === selectedVariant?.id
-        }
-        return true
-      }
-    })
-
-    if (existingItem) {
-      const existingQuantity = existingItem.quantity
-
-      if (product.enableVariants) {
-        return existingQuantity >= (selectedVariant?.inventory || 0)
-      }
-      return existingQuantity >= (product.inventory || 0)
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (reason || busy || value < 1 || value > remaining) return
+    setPending(true)
+    setMessage('')
+    setAttempt(null)
+    try {
+      await addItem({ product: product.id, variant: selectedVariant?.id }, value)
+      // The ecommerce provider can resolve after swallowing an API error.
+      // Confirm the resulting cart quantity before reporting success.
+      setAttempt({ expected: cartQuantity + value, added: value })
+    } catch {
+      const error =
+        'No pudimos agregar el producto. Revisa la disponibilidad e inténtalo nuevamente.'
+      setMessage(error)
+      toast.error(error)
+    } finally {
+      setPending(false)
     }
+  }
 
-    if (product.enableVariants) {
-      if (!selectedVariant) {
-        return true
-      }
+  const attemptSucceeded = !!attempt && cartQuantity >= attempt.expected
+  const attemptMessage = attempt
+    ? attemptSucceeded
+      ? attempt.added === 1
+        ? 'Producto agregado al carrito.'
+        : `${attempt.added} unidades agregadas al carrito.`
+      : 'No pudimos agregar el producto. Revisa la disponibilidad e inténtalo nuevamente.'
+    : ''
 
-      if (selectedVariant.inventory === 0) {
-        return true
-      }
-    } else {
-      if (product.inventory === 0) {
-        return true
-      }
+  useEffect(() => {
+    if (!attempt || isLoading) return
+    if (notifiedAttempt.current !== attempt) {
+      notifiedAttempt.current = attempt
+      if (attemptSucceeded) toast.success(attemptMessage)
+      else toast.error(attemptMessage)
     }
-
-    return false
-  }, [selectedVariant, cart?.items, product])
+    const timer = setTimeout(() => setAttempt(null), 5000)
+    return () => clearTimeout(timer)
+  }, [attempt, attemptSucceeded, attemptMessage, isLoading])
 
   return (
-    <Button
-      aria-label="Add to cart"
-      variant={'outline'}
-      className={clsx({
-        'hover:opacity-90': true,
-      })}
-      disabled={disabled || isLoading}
-      onClick={addToCart}
-      type="submit"
-    >
-      Add To Cart
-    </Button>
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      <label htmlFor={`quantity-${product.id}`} className="text-sm font-medium">
+        Cantidad
+      </label>
+      <div className="flex flex-wrap items-stretch gap-4">
+        <div className="flex rounded border border-[#D1C7C0] bg-white">
+          <button
+            type="button"
+            aria-label="Disminuir cantidad"
+            disabled={!!reason || busy || value <= 1}
+            onClick={() => setQuantity(value - 1)}
+            className="px-4 disabled:opacity-40"
+          >
+            −
+          </button>
+          <input
+            id={`quantity-${product.id}`}
+            name="quantity"
+            type="number"
+            min={1}
+            max={max}
+            step={1}
+            value={value}
+            disabled={!!reason || busy}
+            onChange={(event) => {
+              const next = Number(event.target.value)
+              setQuantity(Number.isFinite(next) ? Math.min(max, Math.max(1, Math.floor(next))) : 1)
+            }}
+            className="w-14 bg-white py-3 text-center text-[#3D393A] disabled:opacity-60"
+          />
+          <button
+            type="button"
+            aria-label="Aumentar cantidad"
+            disabled={!!reason || busy || value >= max}
+            onClick={() => setQuantity(value + 1)}
+            className="px-4 disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
+        <button
+          type="submit"
+          disabled={!!reason || busy}
+          className="grow rounded bg-[#3D393A] px-6 py-3 text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {busy ? 'Agregando…' : 'Agregar al carrito'}
+        </button>
+      </div>
+      <p role="status" aria-live="polite" className="text-sm text-[#4b5563]">
+        {message || attemptMessage || reason}
+      </p>
+    </form>
   )
 }

@@ -10,6 +10,10 @@ import { redirects } from './redirects'
 const NEXT_PUBLIC_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
 const nextConfig: NextConfig = {
+  // Trust only the configured checkout tunnel when serving Next's development assets.
+  allowedDevOrigins: process.env.CHECKOUT_PUBLIC_URL
+    ? [new URL(process.env.CHECKOUT_PUBLIC_URL).hostname]
+    : [],
   // Temporarily required on Windows until Next.js fixes Turbopack Sass resolution.
   // See: https://github.com/vercel/next.js/issues/86431
   sassOptions: {
