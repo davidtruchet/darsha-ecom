@@ -78,6 +78,7 @@ export interface Config {
     brands: Brand;
     media: Media;
     'checkout-attempts': CheckoutAttempt;
+    'order-emails': OrderEmail;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -113,6 +114,7 @@ export interface Config {
     brands: BrandsSelect<false> | BrandsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'checkout-attempts': CheckoutAttemptsSelect<false> | CheckoutAttemptsSelect<true>;
+    'order-emails': OrderEmailsSelect<false> | OrderEmailsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -136,11 +138,13 @@ export interface Config {
     header: Header;
     footer: Footer;
     shipping: Shipping;
+    'order-email-settings': OrderEmailSetting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     shipping: ShippingSelect<false> | ShippingSelect<true>;
+    'order-email-settings': OrderEmailSettingsSelect<false> | OrderEmailSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -261,6 +265,8 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: ('UYU' | 'USD') | null;
+  fulfillmentStatus?: ('unfulfilled' | 'ready-for-pickup' | 'shipped') | null;
+  trackingNumber?: string | null;
   checkoutReference?: string | null;
   paymentState?: ('pending' | 'paid' | 'review' | 'cancelled') | null;
   paymentProvider?: string | null;
@@ -1255,6 +1261,32 @@ export interface CheckoutAttempt {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-emails".
+ */
+export interface OrderEmail {
+  id: number;
+  key: string;
+  order: number | Order;
+  event: string;
+  recipient: string;
+  replyTo: string;
+  subject: string;
+  html: string;
+  text: string;
+  state: 'pending' | 'sending' | 'sent' | 'failed' | 'review' | 'skipped';
+  attempts: number;
+  nextAttemptAt: string;
+  firstAttemptAt?: string | null;
+  leaseUntil?: string | null;
+  leaseToken?: string | null;
+  sentAt?: string | null;
+  messageID?: string | null;
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
 export interface FormSubmission {
@@ -1317,6 +1349,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'checkout-attempts';
         value: number | CheckoutAttempt;
+      } | null)
+    | ({
+        relationTo: 'order-emails';
+        value: number | OrderEmail;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1808,6 +1844,31 @@ export interface CheckoutAttemptsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-emails_select".
+ */
+export interface OrderEmailsSelect<T extends boolean = true> {
+  key?: T;
+  order?: T;
+  event?: T;
+  recipient?: T;
+  replyTo?: T;
+  subject?: T;
+  html?: T;
+  text?: T;
+  state?: T;
+  attempts?: T;
+  nextAttemptAt?: T;
+  firstAttemptAt?: T;
+  leaseUntil?: T;
+  leaseToken?: T;
+  sentAt?: T;
+  messageID?: T;
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
@@ -2130,6 +2191,8 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  fulfillmentStatus?: T;
+  trackingNumber?: T;
   checkoutReference?: T;
   paymentState?: T;
   paymentProvider?: T;
@@ -2307,6 +2370,18 @@ export interface Shipping {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-email-settings".
+ */
+export interface OrderEmailSetting {
+  id: number;
+  enabled?: boolean | null;
+  sellerEmail: string;
+  replyTo: string;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -2371,6 +2446,18 @@ export interface ShippingSelect<T extends boolean = true> {
         interiorPrice?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-email-settings_select".
+ */
+export interface OrderEmailSettingsSelect<T extends boolean = true> {
+  enabled?: T;
+  sellerEmail?: T;
+  replyTo?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

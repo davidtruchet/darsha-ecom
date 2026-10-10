@@ -1,3 +1,4 @@
+import { queueOrderEmails } from '@/lib/orderEmails'
 import { releaseAttempt } from '@/lib/checkout/settlement'
 import { currenciesConfig } from '@/lib/currencies'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
@@ -116,12 +117,60 @@ export const plugins: Plugin[] = [
                 if (attempt && attempt.method !== 'mercadopago')
                   await releaseAttempt(req, attempt.id, 'cancelled')
               }
+              await queueOrderEmails(req, doc, previousDoc)
               return doc
             },
           ],
         },
         fields: [
           ...defaultCollection.fields,
+          {
+            name: 'fulfillmentStatus',
+            type: 'select',
+            label: 'Entrega del pedido',
+            defaultValue: 'unfulfilled',
+            options: [
+              { label: 'Sin preparar', value: 'unfulfilled' },
+              { label: 'Pronto para retirar', value: 'ready-for-pickup' },
+              { label: 'Enviado', value: 'shipped' },
+            ],
+            access: { update: adminOnlyFieldAccess, create: adminOnlyFieldAccess },
+            hooks: {
+              beforeValidate: [
+                ({ value, data, originalDoc }) => {
+                  if (value === originalDoc?.fulfillmentStatus) return value
+                  const order = { ...originalDoc, ...data }
+                  const delivery = order.deliveryDetails as { method?: string } | undefined
+                  if (
+                    value === 'shipped' &&
+                    (order.paymentState !== 'paid' ||
+                      delivery?.method !== 'delivery' ||
+                      order.status === 'cancelled')
+                  )
+                    throw new Error(
+                      'Solo puedes marcar enviado un pedido de entrega pagado y activo.',
+                    )
+                  if (
+                    value === 'ready-for-pickup' &&
+                    (delivery?.method !== 'pickup' ||
+                      order.paymentState === 'review' ||
+                      order.paymentState === 'cancelled' ||
+                      order.status === 'cancelled')
+                  )
+                    throw new Error(
+                      'Solo puedes marcar pronto un retiro activo sin revisión de pago.',
+                    )
+                  return value
+                },
+              ],
+            },
+          },
+          {
+            name: 'trackingNumber',
+            type: 'text',
+            label: 'Número de seguimiento UES (opcional)',
+            access: { update: adminOnlyFieldAccess, create: adminOnlyFieldAccess },
+          },
           { name: 'checkoutReference', type: 'text', unique: true, admin: { readOnly: true } },
           {
             name: 'paymentState',

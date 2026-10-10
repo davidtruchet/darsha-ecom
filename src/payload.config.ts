@@ -16,6 +16,9 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { OrderEmails } from '@/collections/OrderEmails'
+import { OrderEmailSettings } from '@/globals/OrderEmailSettings'
+import { orderEmailsGet, orderEmailsPost } from './endpoints/orderEmails'
 import { CheckoutAttempts } from '@/collections/CheckoutAttempts'
 import { Brands } from '@/collections/Brands'
 import { Categories } from '@/collections/Categories'
@@ -34,11 +37,14 @@ import {
   checkoutExpireGet,
 } from './endpoints/checkout'
 import { shippingQuoteEndpoint } from './endpoints/shippingQuote'
+import { createEmailAdapter } from './lib/email'
+import { getServerSideURL } from './utilities/getURL'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  serverURL: getServerSideURL(),
   i18n: { fallbackLanguage: 'es', supportedLanguages: { es } },
   admin: {
     components: {
@@ -51,7 +57,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Brands, Media, CheckoutAttempts],
+  collections: [Users, Pages, Categories, Brands, Media, CheckoutAttempts, OrderEmails],
   db: vercelPostgresAdapter({
     push: false,
     pool: {
@@ -93,8 +99,10 @@ export default buildConfig({
       ]
     },
   }),
-  //email: nodemailerAdapter(),
+  email: createEmailAdapter(),
   endpoints: [
+    orderEmailsGet,
+    orderEmailsPost,
     shippingQuoteEndpoint,
     checkoutInitiate,
     checkoutStatus,
@@ -102,7 +110,7 @@ export default buildConfig({
     checkoutExpire,
     checkoutExpireGet,
   ],
-  globals: [Header, Footer, Shipping],
+  globals: [Header, Footer, Shipping, OrderEmailSettings],
   plugins: [
     ...plugins,
     vercelBlobStorage({
