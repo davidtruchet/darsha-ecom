@@ -9,6 +9,7 @@ import * as migration_20261005_013529_darsha_product_details from './20261005_01
 import * as migration_20261006_165339_darsha_shipping from './20261006_165339_darsha_shipping'
 import * as migration_20261006_222330_darsha_checkout from './20261006_222330_darsha_checkout'
 import * as migration_20261006_223720_darsha_pickup_details from './20261006_223720_darsha_pickup_details'
+import * as migration_20261010_230133_darsha_order_emails from './20261010_230133_darsha_order_emails'
 
 export const migrations = [
   {
@@ -65,5 +66,10 @@ export const migrations = [
     up: migration_20261006_223720_darsha_pickup_details.up,
     down: migration_20261006_223720_darsha_pickup_details.down,
     name: '20261006_223720_darsha_pickup_details',
+  },
+  {
+    up: migration_20261010_230133_darsha_order_emails.up,
+    down: migration_20261010_230133_darsha_order_emails.down,
+    name: '20261010_230133_darsha_order_emails',
   },
 ]

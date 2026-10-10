@@ -1,6 +1,8 @@
 import { Banner } from '@payloadcms/ui'
 import React from 'react'
+import Link from 'next/link'
 
+import { ProcessOrderEmailsButton } from './ProcessOrderEmailsButton'
 import { SeedButton } from './SeedButton'
 import './index.scss'
 
@@ -22,6 +24,11 @@ export const BeforeDashboard: React.FC = () => {
           {' to see the results.'}
         </li>
         <li>Los pagos usan Mercado Pago Checkout Pro.</li>
+        <li>
+          <Link href="/admin/globals/order-email-settings">Configurar correos de pedidos</Link> ·{' '}
+          <Link href="/admin/collections/order-emails">Ver historial de envíos</Link>
+          <ProcessOrderEmailsButton />
+        </li>
         <li>
           {'Modify your '}
           <a

@@ -42,7 +42,7 @@ const body = {
 }
 let attemptID: number | undefined
 try {
-  const req = await createLocalReq({}, payload)
+  const req = await createLocalReq({ context: { disableOrderNotifications: true } }, payload)
   req.json = async () => body
   const response = await checkoutInitiate.handler(req)
   const result = await response.json()
@@ -64,7 +64,7 @@ try {
     startingInventory - 1,
   )
   assert.equal((await payload.findByID({ collection: 'carts', id: cart.id })).items?.length, 0)
-  const again = await createLocalReq({}, payload)
+  const again = await createLocalReq({ context: { disableOrderNotifications: true } }, payload)
   again.json = async () => body
   const retry = await checkoutInitiate.handler(again)
   const retried = await retry.json()
@@ -75,7 +75,7 @@ try {
     startingInventory - 1,
   )
   const cookie = retry.headers.get('set-cookie')!.split(';')[0]
-  const statusReq = await createLocalReq({}, payload)
+  const statusReq = await createLocalReq({ context: { disableOrderNotifications: true } }, payload)
   statusReq.headers = new Headers({ cookie })
   statusReq.json = async () => ({ reference: result.reference })
   const status = await checkoutStatus.handler(statusReq)
@@ -87,7 +87,10 @@ try {
     await payload.find({ collection: 'users', limit: 1, where: { roles: { contains: 'admin' } } })
   ).docs[0]
   assert(admin)
-  const adminReq = await createLocalReq({ user: admin }, payload)
+  const adminReq = await createLocalReq(
+    { user: admin, context: { disableOrderNotifications: true } },
+    payload,
+  )
   await payload.update({
     collection: 'checkout-attempts',
     id: attempt.id,
@@ -99,8 +102,14 @@ try {
   assert.equal(paid.state, 'paid')
   assert.equal(paid.reservation, 'consumed')
   await Promise.all([
-    completeAttempt(await createLocalReq({}, payload), attempt.id),
-    completeAttempt(await createLocalReq({}, payload), attempt.id),
+    completeAttempt(
+      await createLocalReq({ context: { disableOrderNotifications: true } }, payload),
+      attempt.id,
+    ),
+    completeAttempt(
+      await createLocalReq({ context: { disableOrderNotifications: true } }, payload),
+      attempt.id,
+    ),
   ])
   assert.equal(
     (
@@ -153,7 +162,12 @@ try {
           id: attempt.transaction,
           data: { status: 'cancelled' },
         })
-    } else await releaseAttempt(await createLocalReq({}, payload), attemptID, 'cancelled')
+    } else
+      await releaseAttempt(
+        await createLocalReq({ context: { disableOrderNotifications: true } }, payload),
+        attemptID,
+        'cancelled',
+      )
   }
   assert.equal(
     (await payload.findByID({ collection: 'products', id: product.id })).inventory,

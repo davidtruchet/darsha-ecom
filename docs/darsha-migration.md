@@ -83,3 +83,67 @@ Bank transfer instructions are editable under Envíos and appear only in authori
 Verification: focused payment-signature, immutable-price, delivery, guest-access and cart tests; `src/scripts/verify-darsha-checkout.ts` also verifies real development-DB reservations, idempotent retries, admin manual confirmation and concurrent settlement. It cancels its synthetic orders and restores only their reserved units. Real Mercado Pago test purchases were verified through a temporary Cloudflare HTTPS tunnel, including approved orders, shipping-total correction, review-order recovery, repeat reconciliation and a signed webhook resend returning HTTP 200. The local credentials and tunnel URL are excluded from Git. Production still requires production credentials, a stable HTTPS origin, verified tariffs/weights, and an expiry scheduler.
 
 Pickup address and hours are editable under Envíos and shown at checkout when configured; their additive migration is `20261006_223720_darsha_pickup_details`. They remain blank pending the user's values. Cart lines are kept in a reusable active cart after online settlement so the installed ecommerce provider can continue shopping. Purchase history lives in Orders/Transactions rather than freezing that reusable cart.
+
+## Resend SMTP
+
+Payload uses the existing Nodemailer adapter with Resend SMTP (`smtp.resend.com`,
+port 465, implicit TLS, username `resend`, password from `RESEND_API_KEY`). Configure
+`RESEND_API_KEY`, `EMAIL_FROM_ADDRESS` (an address on a verified Resend domain), and
+`EMAIL_FROM_NAME` (defaults to Espacio Darsha) in local `.env` and the relevant Vercel
+environment, then redeploy. These variables must remain server-only.
+
+Without a key, Payload keeps its no-email behavior. With a key, a valid sender is
+required. SMTP verification is skipped during initialization so builds do not need
+network access; sending still authenticates over TLS. Password-reset emails use this
+adapter automatically. Ensure `NEXT_PUBLIC_SERVER_URL` is the deployed HTTPS origin
+so links point to the correct website. Customer/seller order emails require a separate
+notification workflow and are not sent by this setup.
+
+To verify delivery, request one password reset for your own account from the deployed
+admin and check its arrival plus the Resend Emails dashboard. No email was sent during
+implementation; the verified sender and API key are required for end-to-end testing.
+
+## Order notification emails
+
+`Correos de pedidos` in Globals configures the seller inbox (initially davidmt04@gmail.com),
+reply-to (initially pedidos@espaciodarsha.com), and whether delivery is enabled. Settings
+apply to newly queued messages; existing messages preserve their original recipient/content.
+
+Order creation queues distinct customer/seller messages for paid or unpaid pickup orders.
+Manual payment confirmation queues a payment update. Review states send neutral customer
+language and an operator alert. Orders have an admin-only `Entrega del pedido` selector:
+`Pronto para retirar` requires an active pickup without payment review; `Enviado` requires a
+paid active home-delivery order. Enter the optional UES tracking number before marking shipped.
+Both transitions notify the customer and seller; none creates a shipment automatically.
+
+Messages use the frozen purchase snapshot (Spanish, UYU, items, quantities, delivery, totals,
+pickup location/hours and bank instructions as applicable). Customer-supplied/CMS strings
+are HTML-escaped. Reply-to is configured independently from the verified Resend sender.
+
+`order-emails` is a private durable outbox. Notifications are inserted in the order's database
+transaction, with unique per-order/event/customer-or-seller keys and advisory locks. SMTP
+sending runs with Next `after()` after the HTTP response/commit. SMTP failures cannot undo
+a payment. Concurrent workers use an atomic database lease; sent messages are excluded.
+Resend's SMTP idempotency header supplies an additional 24-hour duplicate guard. Uncertain
+attempts older than 23 hours require operator review in Resend instead of automatic resend.
+Retries are bounded to five attempts with exponential delays. A worker processes at most ten
+messages and stops taking new work after 35 seconds; remaining records stay queued.
+
+The admin dashboard's `Procesar correos pendientes` button runs eligible retries. For unattended
+recovery, schedule GET/POST `/api/order-emails/process` with `Authorization: Bearer CRON_SECRET`.
+No external scheduler is provisioned by this change; configure one before relying on automatic
+retry of a failed final event. Vercel Hobby daily cron alone is insufficient for prompt retries.
+Records in `review` or after five failed attempts need delivery verification and operator
+resolution; the dashboard button does not blindly resend those records.
+
+Apply `20261010_230133_darsha_order_emails` before deploying the matching code. This additive
+migration was applied to the configured development database; it preserves existing orders.
+Old orders do not receive initial notifications retroactively. Synthetic verification orders
+and messages are retained as cancelled/skipped audit records and never sent.
+
+Verification: unit tests cover transitions, escaping, frozen totals, unpaid pickup wording,
+SMTP configuration, concurrent worker claims, failure retention and provider deduplication
+expiry. `verify-darsha-order-emails.ts` validates real-DB customer/seller queue counts and
+concurrent duplicate saves with delivery deferred, then skips the synthetic messages. Three
+approved example emails were accepted by Resend for the admin recipient. No payments or
+shipments were created by email verification.
