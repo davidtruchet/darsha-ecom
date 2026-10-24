@@ -75,10 +75,39 @@ describe('Uruguay shipping quotes', () => {
       calculateShippingQuote({ method: 'pickup' }, [{ product: {}, quantity: 1 }], {}),
     ).toMatchObject({ amount: 0, service: 'darsha-pickup' })
   })
-  it('refuses paid delivery with missing or fractional product weights or packaging weight', () => {
+  it.each([
+    ['Montevideo', 'Centro', 28500],
+    ['Rocha', 'Rocha', 31100],
+  ])('uses the first band for unweighed products in %s', (department, locality, amount) => {
+    const quote = calculateShippingQuote(
+      { method: 'delivery', department, locality },
+      [{ product: {}, quantity: 2 }],
+      { rates: [...settings.rates].reverse() },
+    )
+    expect(quote).toEqual({
+      available: true,
+      amount,
+      currency: 'UYU',
+      service: 'ues-xpres-home',
+      maxWeightGrams: 2000,
+    })
+  })
+  it('uses the first band for a mixed cart without inventing a weight', () => {
     expect(
-      calculateShippingQuote(destination, [{ product: {}, quantity: 1 }], settings).available,
-    ).toBe(false)
+      calculateShippingQuote(
+        destination,
+        [...items, { product: { shippingWeightGrams: null }, quantity: 1 }],
+        settings,
+      ),
+    ).toEqual({
+      available: true,
+      amount: 28500,
+      currency: 'UYU',
+      service: 'ues-xpres-home',
+      maxWeightGrams: 2000,
+    })
+  })
+  it('refuses invalid weights or packaging weight for weighed products', () => {
     expect(
       calculateShippingQuote(
         destination,
@@ -90,6 +119,20 @@ describe('Uruguay shipping quotes', () => {
       calculateShippingQuote(destination, items, { ...settings, packagingWeightGrams: null })
         .available,
     ).toBe(false)
+  })
+  it('refuses missing products, invalid quantities and missing rates even in an unweighed cart', () => {
+    for (const order of [
+      [{ product: null, quantity: 1 }],
+      [{ product: {}, quantity: 0 }],
+      [
+        { product: {}, quantity: 1 },
+        { product: { shippingWeightGrams: -1 }, quantity: 1 },
+      ],
+    ])
+      expect(calculateShippingQuote(destination, order, settings).available).toBe(false)
+    expect(calculateShippingQuote(destination, [{ product: {}, quantity: 1 }], {}).available).toBe(
+      false,
+    )
   })
   it('refuses quantities, destinations or tariff configuration that cannot be trusted', () => {
     expect(
