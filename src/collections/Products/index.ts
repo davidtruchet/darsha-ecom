@@ -74,7 +74,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       min: 1,
       admin: {
         description:
-          'Peso real del producto con su envase, sin la caja de envío. Para variantes usa el mayor peso. No equivale al contenido en ml. Sin peso no se cotiza envío nacional.',
+          'Peso real del producto con su envase, sin la caja de envío. Para variantes usa el mayor peso. No equivale al contenido en ml. Sin peso se aplica temporalmente la primera franja del tarifario de envío nacional.',
       },
       validate: (value: number | null | undefined) =>
         value == null ||

@@ -64,31 +64,6 @@ export function calculateShippingQuote(
     .toLowerCase()
   if (destination.department === 'Maldonado' && ['punta del este', 'maldonado'].includes(locality))
     return { available: true, amount: 0, currency: 'UYU', service: 'darsha-local' }
-  if (
-    !Number.isSafeInteger(settings.packagingWeightGrams) ||
-    (settings.packagingWeightGrams || 0) <= 0
-  )
-    return {
-      available: false,
-      message: 'El peso del embalaje aún no está configurado. No podemos cotizar este envío.',
-    }
-  let weightGrams = settings.packagingWeightGrams!
-  for (const item of items) {
-    const weight = item.product?.shippingWeightGrams
-    if (
-      !Number.isSafeInteger(weight) ||
-      (weight || 0) <= 0 ||
-      !Number.isSafeInteger(item.quantity) ||
-      item.quantity <= 0
-    )
-      return {
-        available: false,
-        message: 'Hay productos sin peso de envío configurado. No podemos cotizar este envío.',
-      }
-    weightGrams += weight! * item.quantity
-    if (!Number.isSafeInteger(weightGrams))
-      return { available: false, message: 'Este pedido requiere coordinación de envío.' }
-  }
   const rates = [...(settings.rates || [])].sort((a, b) => a.maxWeightGrams - b.maxWeightGrams)
   if (
     !rates.length ||
@@ -104,6 +79,41 @@ export function calculateShippingQuote(
     )
   )
     return { available: false, message: 'El tarifario de envío no está disponible.' }
+  let missingWeight = false
+  for (const item of items) {
+    if (!item.product || !Number.isSafeInteger(item.quantity) || item.quantity <= 0)
+      return { available: false, message: 'Hay productos o cantidades no válidos para el envío.' }
+    const weight = item.product.shippingWeightGrams
+    if (weight == null) missingWeight = true
+    else if (!Number.isSafeInteger(weight) || weight <= 0)
+      return { available: false, message: 'Hay productos con peso de envío no válido.' }
+  }
+  // Temporary shop policy: use the first configured band when any product is unweighed.
+  // Leave the actual weight unset rather than recording an estimated product weight.
+  if (missingWeight) {
+    const rate = rates[0]
+    return {
+      available: true,
+      amount: destination.department === 'Montevideo' ? rate.montevideoPrice : rate.interiorPrice,
+      currency: 'UYU',
+      service: 'ues-xpres-home',
+      maxWeightGrams: rate.maxWeightGrams,
+    }
+  }
+  if (
+    !Number.isSafeInteger(settings.packagingWeightGrams) ||
+    (settings.packagingWeightGrams || 0) <= 0
+  )
+    return {
+      available: false,
+      message: 'El peso del embalaje aún no está configurado. No podemos cotizar este envío.',
+    }
+  let weightGrams = settings.packagingWeightGrams!
+  for (const item of items) {
+    weightGrams += item.product!.shippingWeightGrams! * item.quantity
+    if (!Number.isSafeInteger(weightGrams))
+      return { available: false, message: 'Este pedido requiere coordinación de envío.' }
+  }
   const rate = rates.find((rate) => weightGrams <= rate.maxWeightGrams)
   if (!rate || weightGrams > 50000)
     return {
